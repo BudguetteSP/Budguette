@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
+import android.widget.TextView
 
 class LoginActivity : AppCompatActivity() {
 
@@ -11,12 +12,21 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-        val loginButton = findViewById<Button>(R.id.btnLogin)
-        loginButton.setOnClickListener {
-            // (Here you'd normally validate credentials)
-            val intent = Intent(this, MainActivity::class.java)
-            startActivity(intent)
-            finish() // prevent going back to login
+        val btnLogin = findViewById<Button>(R.id.btnLogin)
+        val tvSignUp = findViewById<TextView>(R.id.tvSignUp)
+        val tvForgotPassword = findViewById<TextView>(R.id.tvForgotPassword)
+
+        btnLogin.setOnClickListener {
+            startActivity(Intent(this, MainActivity::class.java))
+            finish()
+        }
+
+        tvSignUp.setOnClickListener {
+            startActivity(Intent(this, SignUpActivity::class.java))
+        }
+
+        tvForgotPassword.setOnClickListener {
+            startActivity(Intent(this, ForgotPasswordActivity::class.java))
         }
     }
 }

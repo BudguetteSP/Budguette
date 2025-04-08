@@ -23,6 +23,9 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".SignUpActivity" />
+        <activity android:name=".ForgotPasswordActivity" />
+
         <!-- MainActivity will be launched after login -->
         <activity android:name=".MainActivity" android:exported="true" />
     </application>
