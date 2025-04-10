@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "134349038453",
+    "project_id": "budguette-d8a83",
+    "storage_bucket": "budguette-d8a83.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:134349038453:android:cffa4325247c502822e93c",
+        "android_client_info": {
+          "package_name": "com.example.budguette"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCrY5t945PzuCEYX9LgSjU_ubsPqhXxZQE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
