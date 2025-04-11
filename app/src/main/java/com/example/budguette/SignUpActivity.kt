@@ -7,6 +7,7 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 class SignUpActivity : AppCompatActivity() {
 
@@ -17,6 +18,8 @@ class SignUpActivity : AppCompatActivity() {
     private lateinit var passwordEditText: EditText
     private lateinit var confirmPasswordEditText: EditText
     private lateinit var signUpButton: Button
+
+    private val firestore = FirebaseFirestore.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,7 +40,7 @@ class SignUpActivity : AppCompatActivity() {
     private fun createAccount() {
         val fullName = fullNameEditText.text.toString()
         val email = emailEditText.text.toString()
-        val dob = dobEditText.text.toString() // Optional, can be stored in Firestore
+        val dob = dobEditText.text.toString()
         val password = passwordEditText.text.toString()
         val confirmPassword = confirmPasswordEditText.text.toString()
 
@@ -54,10 +57,28 @@ class SignUpActivity : AppCompatActivity() {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
-                    Toast.makeText(this, "Account created successfully", Toast.LENGTH_SHORT).show()
-                    // Navigate to MainActivity
-                    startActivity(Intent(this, MainActivity::class.java))
-                    finish()
+                    val userId = auth.currentUser?.uid ?: return@addOnCompleteListener
+
+                    // Save extra user data to Firestore
+                    val user = hashMapOf(
+                        "name" to fullName,
+                        "email" to email,
+                        "dob" to dob,
+                        "bio" to "",
+                        "profileImageUrl" to ""
+                    )
+
+                    FirebaseFirestore.getInstance().collection("users").document(userId)
+                        .set(user)
+                        .addOnSuccessListener {
+                            Toast.makeText(this, "Account created successfully", Toast.LENGTH_SHORT).show()
+                            startActivity(Intent(this, MainActivity::class.java))
+                            finish()
+                        }
+                        .addOnFailureListener {
+                            Toast.makeText(this, "Failed to save user data: ${it.message}", Toast.LENGTH_LONG).show()
+                        }
+
                 } else {
                     Toast.makeText(this, "Sign Up failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
                 }
