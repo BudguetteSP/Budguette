@@ -1,16 +1,20 @@
 package com.example.budguette
 
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.view.*
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
-import com.bumptech.glide.Glide
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.storage.FirebaseStorage
+import java.io.ByteArrayOutputStream
+import java.io.FileNotFoundException
+import java.io.InputStream
+import android.util.Base64
 
 class ProfileFragment : Fragment() {
 
@@ -21,14 +25,19 @@ class ProfileFragment : Fragment() {
     private lateinit var bioEditText: EditText
     private lateinit var saveBioBtn: Button
     private lateinit var changePictureBtn: Button
-    private lateinit var logoutBtn: Button // ✅ Logout button
+    private lateinit var logoutBtn: Button
 
     private val auth = FirebaseAuth.getInstance()
     private val db = FirebaseFirestore.getInstance()
-    private val storage = FirebaseStorage.getInstance()
 
+    // Register image picker result
     private val pickImage = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        uri?.let { uploadProfilePicture(it) }
+        uri?.let {
+            val base64String = convertImageToBase64(it)
+            if (base64String != null) {
+                storeBase64ImageToFirestore(base64String)
+            }
+        }
     }
 
     override fun onCreateView(
@@ -44,7 +53,7 @@ class ProfileFragment : Fragment() {
         bioEditText = view.findViewById(R.id.profile_bio)
         saveBioBtn = view.findViewById(R.id.save_bio_btn)
         changePictureBtn = view.findViewById(R.id.change_picture_btn)
-        logoutBtn = view.findViewById(R.id.logout_button) // ✅
+        logoutBtn = view.findViewById(R.id.logout_button)
 
         loadUserInfo()
 
@@ -67,7 +76,7 @@ class ProfileFragment : Fragment() {
     }
 
     private fun loadUserInfo() {
-        val userId = auth.currentUser?.uid ?: return
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
         val userRef = db.collection("users").document(userId)
 
         userRef.get().addOnSuccessListener { document ->
@@ -77,10 +86,8 @@ class ProfileFragment : Fragment() {
                 dobText.text = document.getString("dob") ?: "N/A"
                 bioEditText.setText(document.getString("bio") ?: "")
 
-                val imageUrl = document.getString("profileImageUrl")
-                if (!imageUrl.isNullOrEmpty()) {
-                    Glide.with(this).load(imageUrl).into(profileImage)
-                }
+                // Load Base64 image from Firestore
+                loadBase64ImageFromFirestore()
             }
         }
     }
@@ -99,21 +106,55 @@ class ProfileFragment : Fragment() {
             }
     }
 
-    private fun uploadProfilePicture(imageUri: Uri) {
-        val userId = auth.currentUser?.uid ?: return
-        val storageRef = storage.reference.child("profile_pictures/$userId.jpg")
+    // Convert image to Base64 string
+    private fun convertImageToBase64(uri: Uri): String? {
+        try {
+            val inputStream: InputStream = requireContext().contentResolver.openInputStream(uri)!!
+            val bitmap = BitmapFactory.decodeStream(inputStream)
+            val byteArrayOutputStream = ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream)
+            val byteArray = byteArrayOutputStream.toByteArray()
+            return Base64.encodeToString(byteArray, Base64.DEFAULT)
+        } catch (e: FileNotFoundException) {
+            e.printStackTrace()
+        }
+        return null
+    }
 
-        storageRef.putFile(imageUri)
+    // Store Base64 string in Firestore
+    private fun storeBase64ImageToFirestore(base64String: String) {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val db = FirebaseFirestore.getInstance()
+
+        db.collection("users").document(userId)
+            .update("profileImageBase64", base64String)
             .addOnSuccessListener {
-                storageRef.downloadUrl.addOnSuccessListener { downloadUri ->
-                    db.collection("users").document(userId)
-                        .update("profileImageUrl", downloadUri.toString())
-                    Glide.with(this).load(downloadUri).into(profileImage)
-                    Toast.makeText(context, "Profile picture updated!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Image saved to Firestore!", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(context, "Error saving image", Toast.LENGTH_SHORT).show()
+                e.printStackTrace()
+            }
+    }
+
+    // Load Base64 image from Firestore and decode
+    private fun loadBase64ImageFromFirestore() {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val db = FirebaseFirestore.getInstance()
+
+        db.collection("users").document(userId)
+            .get()
+            .addOnSuccessListener { document ->
+                val base64String = document.getString("profileImageBase64")
+                if (!base64String.isNullOrEmpty()) {
+                    val decodedBytes = Base64.decode(base64String, Base64.DEFAULT)
+                    val decodedBitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+                    profileImage.setImageBitmap(decodedBitmap)
                 }
             }
-            .addOnFailureListener {
-                Toast.makeText(context, "Failed to upload image.", Toast.LENGTH_SHORT).show()
+            .addOnFailureListener { e ->
+                e.printStackTrace()
             }
     }
 }
+
