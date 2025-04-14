@@ -56,5 +56,15 @@
             android:layout_height="wrap_content"
             android:text="Save Bio"
             android:layout_marginTop="8dp" />
+
+        <Button
+            android:id="@+id/logout_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Log Out"
+            android:layout_marginTop="16dp"
+            android:layout_gravity="center_horizontal"/>
+
+
     </LinearLayout>
 </ScrollView>

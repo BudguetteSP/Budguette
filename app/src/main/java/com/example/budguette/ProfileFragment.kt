@@ -1,6 +1,5 @@
 package com.example.budguette
 
-import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -22,6 +21,7 @@ class ProfileFragment : Fragment() {
     private lateinit var bioEditText: EditText
     private lateinit var saveBioBtn: Button
     private lateinit var changePictureBtn: Button
+    private lateinit var logoutBtn: Button // ✅ Logout button
 
     private val auth = FirebaseAuth.getInstance()
     private val db = FirebaseFirestore.getInstance()
@@ -44,6 +44,7 @@ class ProfileFragment : Fragment() {
         bioEditText = view.findViewById(R.id.profile_bio)
         saveBioBtn = view.findViewById(R.id.save_bio_btn)
         changePictureBtn = view.findViewById(R.id.change_picture_btn)
+        logoutBtn = view.findViewById(R.id.logout_button) // ✅
 
         loadUserInfo()
 
@@ -55,6 +56,13 @@ class ProfileFragment : Fragment() {
             pickImage.launch("image/*")
         }
 
+        logoutBtn.setOnClickListener {
+            FirebaseAuth.getInstance().signOut()
+            Toast.makeText(context, "Logged out", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(requireContext(), LoginActivity::class.java))
+            activity?.finish()
+        }
+
         return view
     }
 
@@ -63,7 +71,7 @@ class ProfileFragment : Fragment() {
         val userRef = db.collection("users").document(userId)
 
         userRef.get().addOnSuccessListener { document ->
-            if (document != null) {
+            if (document != null && document.exists()) {
                 nameText.text = document.getString("name") ?: "N/A"
                 emailText.text = document.getString("email") ?: auth.currentUser?.email
                 dobText.text = document.getString("dob") ?: "N/A"
@@ -109,5 +117,3 @@ class ProfileFragment : Fragment() {
             }
     }
 }
-
-
