@@ -3,10 +3,15 @@ package com.example.budguette
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import android.Manifest
+import android.content.pm.PackageManager
 import com.bumptech.glide.Glide
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -25,6 +30,8 @@ class ProfileFragment : Fragment() {
 
     private val auth = FirebaseAuth.getInstance()
     private val db = FirebaseFirestore.getInstance()
+
+    private val REQUEST_CODE = 1001 // Your request code for permission
 
     // Image picker
     private val pickImage = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
@@ -49,6 +56,9 @@ class ProfileFragment : Fragment() {
         changePictureBtn = view.findViewById(R.id.change_picture_btn)
         logoutBtn = view.findViewById(R.id.logout_button)
 
+        // Check and request permissions for external storage
+        checkAndRequestPermissions()
+
         // Load user info
         loadUserInfo()
 
@@ -68,6 +78,12 @@ class ProfileFragment : Fragment() {
         }
 
         return view
+    }
+
+    private fun checkAndRequestPermissions() {
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), REQUEST_CODE)
+        }
     }
 
     private fun loadUserInfo() {
@@ -104,27 +120,25 @@ class ProfileFragment : Fragment() {
     }
 
     private fun loadProfileImage(url: String?) {
-        if (!url.isNullOrEmpty()) {
-            Glide.with(this)
-                .load(url)
-                .placeholder(R.drawable.ic_defaultprofile_background) // Optional placeholder
-                .into(profileImage)
-        } else {
-            profileImage.setImageResource(R.drawable.ic_defaultprofile_background) // Fallback image
-        }
+        Glide.with(this)
+            .load(url)
+            .placeholder(R.drawable.ic_defaultprofile_backgroun) // Optional placeholder
+            .into(profileImage)
     }
 
     private fun uploadImageToFirebaseStorage(imageUri: Uri) {
         val userId = auth.currentUser?.uid ?: return
         val storageRef = FirebaseStorage.getInstance().reference.child("profile_pictures/$userId.jpg")
 
+        Log.d("ProfileFragment", "Uploading image: $imageUri")
         storageRef.putFile(imageUri)
             .addOnSuccessListener {
                 storageRef.downloadUrl.addOnSuccessListener { uri ->
                     saveImageUrlToFirestore(uri.toString())
                 }
             }
-            .addOnFailureListener {
+            .addOnFailureListener { exception ->
+                Log.e("ProfileFragment", "Image upload failed", exception)
                 Toast.makeText(context, "Image upload failed", Toast.LENGTH_SHORT).show()
             }
     }
