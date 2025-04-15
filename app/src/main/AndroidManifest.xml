@@ -32,6 +32,10 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".CreatePostActivity">
+            <!-- Optional: You can add intent filters if needed -->
+        </activity>
+
         <activity android:name=".SignUpActivity" />
         <activity android:name=".ForgotPasswordActivity" />
         <activity android:name=".MainActivity" android:exported="true" />
