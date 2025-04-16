@@ -122,13 +122,15 @@ class ProfileFragment : Fragment() {
     private fun loadProfileImage(url: String?) {
         Glide.with(this)
             .load(url)
-            .placeholder(R.drawable.ic_defaultprofile_backgroun) // Optional placeholder
+            .placeholder(R.drawable.ic_defaultprofile_background) // Optional placeholder
             .into(profileImage)
     }
 
     private fun uploadImageToFirebaseStorage(imageUri: Uri) {
         val userId = auth.currentUser?.uid ?: return
-        val storageRef = FirebaseStorage.getInstance().reference.child("profile_pictures/$userId.jpg")
+        val storageRef = FirebaseStorage.getInstance().reference
+            .child("profile_pictures/${userId}.jpg") // Make sure it's using UID
+
 
         Log.d("ProfileFragment", "Uploading image: $imageUri")
         storageRef.putFile(imageUri)
