@@ -31,11 +31,14 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:hint="Date of Birth"
-        android:inputType="date"
+        android:focusable="false"
+        android:clickable="true"
+        android:inputType="none"
         app:layout_constraintTop_toBottomOf="@id/email_edit_text"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="16dp"/>
+
 
     <EditText
         android:id="@+id/password_edit_text"

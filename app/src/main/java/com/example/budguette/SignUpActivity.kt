@@ -1,5 +1,6 @@
 package com.example.budguette
 
+import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
@@ -8,6 +9,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import java.util.Calendar
 
 class SignUpActivity : AppCompatActivity() {
 
@@ -35,6 +37,22 @@ class SignUpActivity : AppCompatActivity() {
         signUpButton = findViewById(R.id.sign_up_button)
 
         signUpButton.setOnClickListener { createAccount() }
+
+        dobEditText.setOnClickListener {
+            val calendar = Calendar.getInstance()
+            val year = calendar.get(Calendar.YEAR)
+            val month = calendar.get(Calendar.MONTH)
+            val day = calendar.get(Calendar.DAY_OF_MONTH)
+
+            val datePickerDialog = DatePickerDialog(this,
+                { _, selectedYear, selectedMonth, selectedDay ->
+                    // Format as MM/DD/YYYY
+                    val selectedDate = "${selectedMonth + 1}/$selectedDay/$selectedYear"
+                    dobEditText.setText(selectedDate)
+                }, year, month, day
+            )
+            datePickerDialog.show()
+        }
     }
 
     private fun createAccount() {
