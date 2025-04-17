@@ -20,10 +20,10 @@ class MainActivity : AppCompatActivity() {
         bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_home -> loadFragment(HomeFragment())
-                R.id.nav_profile -> loadFragment(ProfileFragment())
                 R.id.nav_expenses -> loadFragment(ExpensesFragment())
-                R.id.nav_subscriptions -> loadFragment(SubscriptionsFragment())
                 R.id.nav_forums -> loadFragment(ForumsFragment())
+                R.id.nav_subscriptions -> loadFragment(SubscriptionsFragment())
+                R.id.nav_profile -> loadFragment(ProfileFragment())
             }
             true
         }
