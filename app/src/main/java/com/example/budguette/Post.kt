@@ -6,5 +6,7 @@ data class Post(
     val profileImageUrl: String = "",
     val title: String = "",
     val caption: String = "",
-    val timestamp: Long = System.currentTimeMillis() // Timestamp for sorting posts
+    val timestamp: Long = System.currentTimeMillis(),
+    var id: String = "" // <-- New!
 )
+

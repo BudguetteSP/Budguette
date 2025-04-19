@@ -1,5 +1,6 @@
 package com.example.budguette
 
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,11 +15,28 @@ class PostAdapter : RecyclerView.Adapter<PostAdapter.PostViewHolder>() {
 
     private val postList = mutableListOf<Post>()
 
-    class PostViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    inner class PostViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val profilePic: ImageView = itemView.findViewById(R.id.profile_image)
         val userName: TextView = itemView.findViewById(R.id.user_name)
         val title: TextView = itemView.findViewById(R.id.post_title)
         val caption: TextView = itemView.findViewById(R.id.post_caption)
+
+        init {
+            itemView.setOnClickListener {
+                val position = adapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    val post = postList[position]
+                    val context = itemView.context
+                    val intent = Intent(context, PostDetailActivity::class.java).apply {
+                        putExtra("postId", post.id)
+                        putExtra("postUserId", post.userId)
+                        putExtra("title", post.title)
+                        putExtra("caption", post.caption)
+                    }
+                    context.startActivity(intent)
+                }
+            }
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PostViewHolder {
@@ -33,7 +51,6 @@ class PostAdapter : RecyclerView.Adapter<PostAdapter.PostViewHolder>() {
         holder.title.text = post.title
         holder.caption.text = post.caption
 
-        // Fetch profile image from Firebase Storage using userId
         val storageRef = FirebaseStorage.getInstance().reference
         val profilePicRef = storageRef.child("profile_pictures/${post.userId}.jpg")
 
@@ -60,7 +77,6 @@ class PostAdapter : RecyclerView.Adapter<PostAdapter.PostViewHolder>() {
             }
     }
 
-
     override fun getItemCount(): Int = postList.size
 
     fun submitList(newList: List<Post>) {
@@ -69,4 +85,5 @@ class PostAdapter : RecyclerView.Adapter<PostAdapter.PostViewHolder>() {
         notifyDataSetChanged()
     }
 }
+
 
