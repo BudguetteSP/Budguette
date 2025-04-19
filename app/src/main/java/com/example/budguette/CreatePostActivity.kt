@@ -44,7 +44,7 @@ class CreatePostActivity : AppCompatActivity() {
                         finish() // Go back to ForumsFragment
                     }
                     .addOnFailureListener { e ->
-                        Toast.makeText(this, "Failed to create post.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "Failed to create post: ${e.message}", Toast.LENGTH_LONG).show()
                         e.printStackTrace()
                     }
             } else {

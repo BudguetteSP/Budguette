@@ -7,6 +7,8 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 
 class PostAdapter : RecyclerView.Adapter<PostAdapter.PostViewHolder>() {
 
@@ -31,11 +33,33 @@ class PostAdapter : RecyclerView.Adapter<PostAdapter.PostViewHolder>() {
         holder.title.text = post.title
         holder.caption.text = post.caption
 
-        Glide.with(holder.itemView.context)
-            .load(post.profileImageUrl)
-            .placeholder(R.drawable.ic_defaultprofile_background)
-            .into(holder.profilePic)
+        // Fetch profile image from Firebase Storage using userId
+        val storageRef = FirebaseStorage.getInstance().reference
+        val profilePicRef = storageRef.child("profile_pictures/${post.userId}.jpg")
+
+        profilePicRef.downloadUrl
+            .addOnSuccessListener { uri ->
+                Glide.with(holder.itemView.context)
+                    .load(uri)
+                    .placeholder(R.drawable.ic_defaultprofile_background)
+                    .circleCrop()
+                    .into(holder.profilePic)
+            }
+            .addOnFailureListener {
+                holder.profilePic.setImageResource(R.drawable.ic_defaultprofile_background)
+            }
+
+        val db = FirebaseFirestore.getInstance()
+        db.collection("users").document(post.userId).get()
+            .addOnSuccessListener { doc ->
+                val name = doc.getString("name") ?: "Unknown"
+                holder.userName.text = name
+            }
+            .addOnFailureListener {
+                holder.userName.text = "Unknown"
+            }
     }
+
 
     override fun getItemCount(): Int = postList.size
 
