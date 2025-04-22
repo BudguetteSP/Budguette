@@ -2,7 +2,8 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    android:padding="16dp"
+    android:background="#003D5B">
 
     <LinearLayout
         android:orientation="vertical"
@@ -12,59 +13,83 @@
 
         <ImageView
             android:id="@+id/profile_image"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
             android:src="@drawable/ic_launcher_foreground"
             android:scaleType="centerCrop"
-            android:layout_marginBottom="16dp" />
+            android:layout_marginBottom="16dp"
+            android:background="#00798C"
+            android:padding="4dp"
+            android:elevation="4dp"
+            android:contentDescription="@string/profile_image" />
 
         <Button
             android:id="@+id/change_picture_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Change Picture" />
+            android:text="@string/change_picture"
+            android:backgroundTint="#EDAE49"
+            android:textColor="#003D5B" />
 
-        <TextView android:id="@+id/profile_name"
+        <TextView
+            android:id="@+id/profile_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Name"
+            android:text="@string/name"
             android:textStyle="bold"
+            android:textColor="#EDAE49"
+            android:textSize="18sp"
             android:layout_marginTop="16dp" />
 
-        <TextView android:id="@+id/profile_email"
+        <TextView
+            android:id="@+id/profile_email"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Email" />
+            android:text="@string/email"
+            android:textColor="#FFFFFF"
+            android:layout_marginTop="4dp" />
 
-        <TextView android:id="@+id/profile_dob"
+        <TextView
+            android:id="@+id/profile_dob"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Date of Birth" />
+            android:text="@string/date_of_birth"
+            android:textColor="#FFFFFF"
+            android:layout_marginTop="4dp" />
 
         <EditText
             android:id="@+id/profile_bio"
             android:layout_width="match_parent"
-            android:layout_height="100dp"
-            android:hint="Enter your bio"
-            android:gravity="top"
-            android:background="@android:drawable/editbox_background"
-            android:layout_marginTop="16dp"/>
+            android:layout_height="120dp"
+            android:inputType="textMultiLine"
+            android:autofillHints="username"
+            android:hint="@string/enter_your_bio"
+            android:gravity="top|start"
+            android:backgroundTint="#30638E"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#FFFFFF"
+            android:layout_marginTop="16dp"
+            android:padding="8dp" />
 
         <Button
             android:id="@+id/save_bio_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Save Bio"
-            android:layout_marginTop="8dp" />
+            android:text="@string/save_bio"
+            android:layout_marginTop="8dp"
+            android:backgroundTint="#EDAE49"
+            android:textColor="#003D5B" />
 
         <Button
             android:id="@+id/logout_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Log Out"
+            android:text="@string/log_out"
             android:layout_marginTop="16dp"
-            android:layout_gravity="center_horizontal"/>
-
+            android:backgroundTint="#D1495B"
+            android:textColor="#FFFFFF"
+            android:layout_gravity="center_horizontal" />
 
     </LinearLayout>
 </ScrollView>
+
