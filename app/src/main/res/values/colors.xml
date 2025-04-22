@@ -4,4 +4,9 @@
     <color name="white">#FFFFFF</color>
     <color name="purple">#800080</color>
     <color name="red">#FF0000</color>
+
+    <!-- New colors for BottomNavigationView -->
+    <color name="nav_background">#003D5B</color> <!-- Blue background -->
+    <color name="nav_item_selected">#EDAE49</color> <!-- Golden icon/text color -->
+    <color name="nav_item_unselected">#EDAE49</color> <!-- Golden icon/text color (for unselected) -->
 </resources>
