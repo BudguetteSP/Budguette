@@ -4,6 +4,11 @@
     <color name="white">#FFFFFF</color>
     <color name="purple">#800080</color>
     <color name="red">#FF0000</color>
+    <color name="navy_blue">#001F3F</color>
+    <color name="gold">#EDAE49</color>
+    <color name="light_grey">#CCCCCC</color>
+    <color name="transparent_white">#80FFFFFF</color> <!-- 50% transparent white -->
+
 
     <!-- New colors for BottomNavigationView -->
     <color name="nav_background">#003D5B</color> <!-- Blue background -->
