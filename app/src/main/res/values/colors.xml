@@ -11,7 +11,7 @@
 
 
     <!-- New colors for BottomNavigationView -->
-    <color name="nav_background">#003D5B</color> <!-- Blue background -->
+    <color name="nav_background">#001F3F</color> <!-- Blue background -->
     <color name="nav_item_selected">#EDAE49</color> <!-- Golden icon/text color -->
     <color name="nav_item_unselected">#EDAE49</color> <!-- Golden icon/text color (for unselected) -->
 </resources>
