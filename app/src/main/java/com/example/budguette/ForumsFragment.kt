@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -17,7 +18,8 @@ import com.google.firebase.firestore.Query
 class ForumsFragment : Fragment() {
 
     private lateinit var postsRecyclerView: RecyclerView
-    private lateinit var createPostBtn: FloatingActionButton  // Change to FloatingActionButton
+    private lateinit var swipeRefreshLayout: SwipeRefreshLayout
+    private lateinit var createPostBtn: FloatingActionButton
     private val auth = FirebaseAuth.getInstance()
     private val db = FirebaseFirestore.getInstance()
     private lateinit var postAdapter: PostAdapter
@@ -25,20 +27,22 @@ class ForumsFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         val view = inflater.inflate(R.layout.fragment_forums, container, false)
 
         postsRecyclerView = view.findViewById(R.id.posts_recycler_view)
+        swipeRefreshLayout = view.findViewById(R.id.swipe_refresh_layout)
         createPostBtn = view.findViewById(R.id.create_post_button)
 
         postAdapter = PostAdapter()
         postsRecyclerView.layoutManager = LinearLayoutManager(context)
         postsRecyclerView.adapter = postAdapter
 
-        loadPosts()
+        swipeRefreshLayout.setOnRefreshListener {
+            loadPosts()
+        }
 
         createPostBtn.setOnClickListener {
-            // Navigate to CreatePostActivity or CreatePostFragment
             val intent = Intent(requireContext(), CreatePostActivity::class.java)
             startActivity(intent)
         }
@@ -46,25 +50,30 @@ class ForumsFragment : Fragment() {
         return view
     }
 
+    override fun onResume() {
+        super.onResume()
+        loadPosts()
+    }
+
     private fun loadPosts() {
-        val adapter = PostAdapter()
-        postsRecyclerView.adapter = adapter
+        swipeRefreshLayout.isRefreshing = true
 
         db.collection("posts")
             .orderBy("timestamp", Query.Direction.DESCENDING)
             .get()
             .addOnSuccessListener { documents ->
-                // Build a list of Posts that includes the document ID
                 val postsList = documents.map { doc ->
-                    doc.toObject(Post::class.java)
-                        .copy(id = doc.id)     // ← copy in the Firestore-generated ID
+                    doc.toObject(Post::class.java).copy(id = doc.id)
                 }
-                adapter.submitList(postsList)
+                postAdapter.submitList(postsList)
+                swipeRefreshLayout.isRefreshing = false
             }
             .addOnFailureListener { e ->
                 Toast.makeText(context, "Failed to load posts: ${e.message}", Toast.LENGTH_SHORT).show()
+                swipeRefreshLayout.isRefreshing = false
             }
     }
-
 }
+
+
 
