@@ -2,13 +2,14 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp"
-    android:background="#003D5B">
+    android:padding="15dp"
+    android:background="#FFFFFF">
 
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
         android:gravity="center_horizontal">
 
         <ImageView
@@ -28,8 +29,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/change_picture"
-            android:backgroundTint="#EDAE49"
-            android:textColor="#003D5B" />
+            android:backgroundTint="#003D5B"
+            android:textColor="#FFFFFF" />
 
         <TextView
             android:id="@+id/profile_name"
@@ -46,7 +47,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/email"
-            android:textColor="#FFFFFF"
+            android:textColor="#000000"
             android:layout_marginTop="4dp" />
 
         <TextView
@@ -54,7 +55,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/date_of_birth"
-            android:textColor="#FFFFFF"
+            android:textColor="#000000"
             android:layout_marginTop="4dp" />
 
         <EditText
@@ -65,9 +66,9 @@
             android:autofillHints="username"
             android:hint="@string/enter_your_bio"
             android:gravity="top|start"
-            android:backgroundTint="#30638E"
-            android:textColor="#FFFFFF"
-            android:textColorHint="#FFFFFF"
+            android:backgroundTint="#EDAE49"
+            android:textColor="#000000"
+            android:textColorHint="#EDAE49"
             android:layout_marginTop="16dp"
             android:padding="8dp" />
 
@@ -77,18 +78,18 @@
             android:layout_height="wrap_content"
             android:text="@string/save_bio"
             android:layout_marginTop="8dp"
-            android:backgroundTint="#EDAE49"
-            android:textColor="#003D5B" />
+            android:backgroundTint="#003D5B"
+            android:textColor="#FFFFFF" />
 
         <Button
             android:id="@+id/logout_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/log_out"
-            android:layout_marginTop="16dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="50dp"
             android:backgroundTint="#D1495B"
-            android:textColor="#FFFFFF"
-            android:layout_gravity="center_horizontal" />
+            android:text="@string/log_out"
+            android:textColor="#FFFFFF" />
 
     </LinearLayout>
 </ScrollView>

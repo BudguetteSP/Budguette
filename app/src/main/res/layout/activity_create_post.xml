@@ -47,8 +47,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Post"
-            android:backgroundTint="@color/purple"
-            android:textColor="@android:color/white"
-            android:padding="12dp" />
+            android:padding="12dp"
+            android:backgroundTint="#003D5B"
+            android:textColor="#FFFFFF"/>
     </LinearLayout>
 </ScrollView>
