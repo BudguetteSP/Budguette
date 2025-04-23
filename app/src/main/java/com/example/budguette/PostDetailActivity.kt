@@ -1,5 +1,6 @@
 package com.example.budguette
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
@@ -62,8 +63,23 @@ class PostDetailActivity : AppCompatActivity() {
             performDelete(currentUser.uid)
         }
 
+        // Set click listener on user profile name and image
+        userImageView.setOnClickListener {
+            openUserProfile(postUserId)
+        }
+
+        userNameTextView.setOnClickListener {
+            openUserProfile(postUserId)
+        }
+
         // Fetch and display user info
         fetchUserInfo(postUserId)
+    }
+
+    private fun openUserProfile(userId: String) {
+        val intent = Intent(this, UserProfileActivity::class.java)
+        intent.putExtra("userId", userId)
+        startActivity(intent)
     }
 
     private fun fetchUserInfo(userId: String) {
@@ -108,6 +124,8 @@ class PostDetailActivity : AppCompatActivity() {
             }
     }
 }
+
+
 
 
 
