@@ -28,12 +28,13 @@ class PostAdapter : RecyclerView.Adapter<PostAdapter.PostViewHolder>() {
                     val post = postList[position]
                     val context = itemView.context
                     val intent = Intent(context, PostDetailActivity::class.java).apply {
-                        putExtra("postId", post.id)
+                        putExtra("postId",   post.id)
+                        putExtra("title",    post.title)
+                        putExtra("caption",  post.caption)
                         putExtra("postUserId", post.userId)
-                        putExtra("title", post.title)
-                        putExtra("caption", post.caption)
                     }
                     context.startActivity(intent)
+
                 }
             }
         }

@@ -1,0 +1,8 @@
+<resources>
+    <!-- Other styles -->
+
+    <!-- Style for Bottom Navigation Item Text -->
+    <style name="NavItemTextStyle">
+        <item name="android:textSize">12sp</item>
+    </style>
+</resources>

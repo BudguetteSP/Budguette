@@ -37,6 +37,7 @@
             <!-- Optional: You can add intent filters if needed -->
         </activity>
 
+        <activity android:name=".UserProfileActivity" />
         <activity android:name=".PostDetailActivity" />
         <activity android:name=".SignUpActivity" />
         <activity android:name=".ForgotPasswordActivity" />
