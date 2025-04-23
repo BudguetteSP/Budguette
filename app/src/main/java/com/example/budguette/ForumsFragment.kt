@@ -47,20 +47,24 @@ class ForumsFragment : Fragment() {
     }
 
     private fun loadPosts() {
+        val adapter = PostAdapter()
+        postsRecyclerView.adapter = adapter
+
         db.collection("posts")
             .orderBy("timestamp", Query.Direction.DESCENDING)
             .get()
             .addOnSuccessListener { documents ->
-                val postsList = mutableListOf<Post>()
-                for (document in documents) {
-                    val post = document.toObject(Post::class.java)
-                    postsList.add(post)
+                // Build a list of Posts that includes the document ID
+                val postsList = documents.map { doc ->
+                    doc.toObject(Post::class.java)
+                        .copy(id = doc.id)     // ← copy in the Firestore-generated ID
                 }
-                postAdapter.submitList(postsList)
+                adapter.submitList(postsList)
             }
-            .addOnFailureListener { exception ->
-                Toast.makeText(context, "Failed to load posts.", Toast.LENGTH_SHORT).show()
+            .addOnFailureListener { e ->
+                Toast.makeText(context, "Failed to load posts: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
+
 }
 

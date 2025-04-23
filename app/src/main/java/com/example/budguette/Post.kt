@@ -7,6 +7,6 @@ data class Post(
     val title: String = "",
     val caption: String = "",
     val timestamp: Long = System.currentTimeMillis(),
-    var id: String = "" // <-- New!
+    var id: String = ""
 )
 
