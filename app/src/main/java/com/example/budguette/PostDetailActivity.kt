@@ -1,11 +1,9 @@
 package com.example.budguette
 
-import android.content.Intent
 import android.os.Bundle
-import android.widget.Button
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import com.bumptech.glide.Glide
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -14,17 +12,18 @@ class PostDetailActivity : AppCompatActivity() {
     private lateinit var titleTextView: TextView
     private lateinit var captionTextView: TextView
     private lateinit var deleteButton: Button
+    private lateinit var userImageView: ImageView
+    private lateinit var userNameTextView: TextView
 
     private val auth = FirebaseAuth.getInstance()
-    private val db   = FirebaseFirestore.getInstance()
+    private val db = FirebaseFirestore.getInstance()
 
-    private var postId: String     = ""
+    private var postId: String = ""
     private var postUserId: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 1) Ensure user is authenticated
         val currentUser = auth.currentUser
         if (currentUser == null) {
             Toast.makeText(this, "You must be logged in to view this post", Toast.LENGTH_LONG).show()
@@ -34,40 +33,64 @@ class PostDetailActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_post_detail)
 
-        // 2) Wire up views
-        titleTextView   = findViewById(R.id.post_detail_title)
+        // Wire views
+        titleTextView = findViewById(R.id.post_detail_title)
         captionTextView = findViewById(R.id.post_detail_caption)
-        deleteButton    = findViewById(R.id.delete_post_button)
+        deleteButton = findViewById(R.id.delete_post_button)
+        userImageView = findViewById(R.id.post_user_image)
+        userNameTextView = findViewById(R.id.post_user_name)
 
-        // 3) Retrieve Intent extras
-        val title   = intent.getStringExtra("title")   ?: ""
+        // Get extras
+        val title = intent.getStringExtra("title") ?: ""
         val caption = intent.getStringExtra("caption") ?: ""
-        postId      = intent.getStringExtra("postId")     ?: ""
-        postUserId  = intent.getStringExtra("postUserId") ?: ""
+        postId = intent.getStringExtra("postId") ?: ""
+        postUserId = intent.getStringExtra("postUserId") ?: ""
 
-        // 4) Validate postId
         if (postId.isBlank()) {
             Toast.makeText(this, "Invalid post ID", Toast.LENGTH_SHORT).show()
             finish()
             return
         }
 
-        // 5) Populate UI
-        titleTextView.text   = title
+        titleTextView.text = title
         captionTextView.text = caption
 
-        // 6) Show delete button only if current user is the author
         deleteButton.visibility =
-            if (currentUser.uid == postUserId) Button.VISIBLE
-            else Button.GONE
+            if (currentUser.uid == postUserId) Button.VISIBLE else Button.GONE
 
         deleteButton.setOnClickListener {
             performDelete(currentUser.uid)
         }
+
+        // Fetch and display user info
+        fetchUserInfo(postUserId)
+    }
+
+    private fun fetchUserInfo(userId: String) {
+        db.collection("users").document(userId).get()
+            .addOnSuccessListener { doc ->
+                val name = doc.getString("name") ?: "Unknown User"
+                val profileUrl = doc.getString("profileImageUrl")
+
+                userNameTextView.text = name
+
+                if (!profileUrl.isNullOrEmpty()) {
+                    Glide.with(this)
+                        .load(profileUrl)
+                        .placeholder(R.drawable.ic_defaultprofile_background)
+                        .circleCrop()
+                        .into(userImageView)
+                } else {
+                    userImageView.setImageResource(R.drawable.ic_defaultprofile_background)
+                }
+            }
+            .addOnFailureListener {
+                userNameTextView.text = "User"
+                userImageView.setImageResource(R.drawable.ic_defaultprofile_background)
+            }
     }
 
     private fun performDelete(currentUid: String) {
-        // Final guard: user must still be authenticated & owner
         if (auth.currentUser?.uid != currentUid || currentUid != postUserId) {
             Toast.makeText(this, "You’re not authorized to delete this post", Toast.LENGTH_SHORT).show()
             return
@@ -85,7 +108,6 @@ class PostDetailActivity : AppCompatActivity() {
             }
     }
 }
-
 
 
 
