@@ -3,6 +3,7 @@ package com.example.budguette
 import android.content.Intent
 import android.os.Bundle
 import android.widget.*
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.google.firebase.auth.FirebaseAuth
@@ -60,8 +61,9 @@ class PostDetailActivity : AppCompatActivity() {
             if (currentUser.uid == postUserId) Button.VISIBLE else Button.GONE
 
         deleteButton.setOnClickListener {
-            performDelete(currentUser.uid)
+            showDeleteConfirmationDialog(currentUser.uid)
         }
+
 
         // Set click listener on user profile name and image
         userImageView.setOnClickListener {
@@ -122,6 +124,25 @@ class PostDetailActivity : AppCompatActivity() {
             .addOnFailureListener { e ->
                 Toast.makeText(this, "Delete failed: ${e.message}", Toast.LENGTH_LONG).show()
             }
+    }
+
+    private fun showDeleteConfirmationDialog(currentUid: String) {
+        // Create the dialog
+        val dialogBuilder = AlertDialog.Builder(this)
+        dialogBuilder.setMessage("Are you sure you want to delete your post?")
+            .setCancelable(false)
+            .setPositiveButton("Yes") { dialog, id ->
+                // User clicked "Yes" -> Perform delete
+                performDelete(currentUid)
+            }
+            .setNegativeButton("No") { dialog, id ->
+                // User clicked "No" -> Dismiss the dialog
+                dialog.dismiss()
+            }
+
+        // Show the dialog
+        val alert = dialogBuilder.create()
+        alert.show()
     }
 }
 

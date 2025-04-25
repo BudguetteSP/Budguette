@@ -71,11 +71,19 @@ class ProfileFragment : Fragment() {
         }
 
         logoutBtn.setOnClickListener {
-            auth.signOut()
-            Toast.makeText(context, "Logged out", Toast.LENGTH_SHORT).show()
-            startActivity(Intent(requireContext(), LoginActivity::class.java))
-            activity?.finish()
+            val builder = android.app.AlertDialog.Builder(requireContext())
+            builder.setTitle("Confirm Logout")
+            builder.setMessage("Are you sure you want to log out?")
+            builder.setPositiveButton("Yes") { _, _ ->
+                auth.signOut()
+                Toast.makeText(context, "Logged out", Toast.LENGTH_SHORT).show()
+                startActivity(Intent(requireContext(), LoginActivity::class.java))
+                activity?.finish()
+            }
+            builder.setNegativeButton("Cancel", null)
+            builder.show()
         }
+
 
         return view
     }
