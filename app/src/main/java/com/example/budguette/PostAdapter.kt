@@ -120,7 +120,6 @@ class PostAdapter : RecyclerView.Adapter<PostAdapter.PostViewHolder>() {
 
         return spannable
     }
-hun
 }
 
 
