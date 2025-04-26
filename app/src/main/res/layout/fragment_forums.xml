@@ -7,11 +7,28 @@
     android:layout_height="match_parent"
     tools:context=".ForumsFragment">
 
+    <!-- Search bar at the top -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="8dp"
+        android:background="@android:color/white"
+        android:elevation="4dp">
+
+        <androidx.appcompat.widget.SearchView
+            android:id="@+id/search_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:queryHint="Search posts..." />
+    </LinearLayout>
+
     <!-- SwipeRefreshLayout wraps the RecyclerView -->
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipe_refresh_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:layout_marginTop="56dp"> <!-- space below search bar -->
 
         <!-- RecyclerView inside SwipeRefreshLayout -->
         <androidx.recyclerview.widget.RecyclerView
@@ -36,6 +53,7 @@
         app:tint="@android:color/white" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
 
 
 
