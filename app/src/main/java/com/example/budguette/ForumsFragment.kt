@@ -100,8 +100,9 @@ class ForumsFragment : Fragment() {
         val filteredList = fullPostList.filter {
             it.title.contains(query, ignoreCase = true) || it.caption.contains(query, ignoreCase = true)
         }
-        postAdapter.submitList(filteredList)
+        postAdapter.submitList(filteredList, query) // <-- update here
     }
+
 }
 
 

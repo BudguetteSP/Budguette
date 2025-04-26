@@ -1,6 +1,10 @@
 package com.example.budguette
 
 import android.content.Intent
+import android.graphics.Color
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.style.ForegroundColorSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,6 +18,14 @@ import com.google.firebase.storage.FirebaseStorage
 class PostAdapter : RecyclerView.Adapter<PostAdapter.PostViewHolder>() {
 
     private val postList = mutableListOf<Post>()
+    private var searchQuery: String? = null
+
+    fun submitList(newList: List<Post>, query: String? = null) {
+        postList.clear()
+        postList.addAll(newList)
+        searchQuery = query
+        notifyDataSetChanged()
+    }
 
     inner class PostViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val profilePic: ImageView = itemView.findViewById(R.id.profile_image)
@@ -28,13 +40,12 @@ class PostAdapter : RecyclerView.Adapter<PostAdapter.PostViewHolder>() {
                     val post = postList[position]
                     val context = itemView.context
                     val intent = Intent(context, PostDetailActivity::class.java).apply {
-                        putExtra("postId",   post.id)
-                        putExtra("title",    post.title)
-                        putExtra("caption",  post.caption)
+                        putExtra("postId", post.id)
+                        putExtra("title", post.title)
+                        putExtra("caption", post.caption)
                         putExtra("postUserId", post.userId)
                     }
                     context.startActivity(intent)
-
                 }
             }
         }
@@ -48,9 +59,8 @@ class PostAdapter : RecyclerView.Adapter<PostAdapter.PostViewHolder>() {
 
     override fun onBindViewHolder(holder: PostViewHolder, position: Int) {
         val post = postList[position]
-        holder.userName.text = post.userName
-        holder.title.text = post.title
-        holder.caption.text = post.caption
+        holder.title.text = getHighlightedText(post.title, searchQuery)
+        holder.caption.text = getHighlightedText(post.caption, searchQuery)
 
         val storageRef = FirebaseStorage.getInstance().reference
         val profilePicRef = storageRef.child("profile_pictures/${post.userId}.jpg")
@@ -80,11 +90,37 @@ class PostAdapter : RecyclerView.Adapter<PostAdapter.PostViewHolder>() {
 
     override fun getItemCount(): Int = postList.size
 
-    fun submitList(newList: List<Post>) {
-        postList.clear()
-        postList.addAll(newList)
-        notifyDataSetChanged()
+    private fun getHighlightedText(text: String, query: String?): CharSequence {
+        if (query.isNullOrBlank()) return text
+
+        val spannable = SpannableString(text)
+        val lowerText = text.lowercase()
+        val lowerQuery = query.lowercase()
+
+        var startIndex = lowerText.indexOf(lowerQuery)
+        while (startIndex >= 0) {
+            val endIndex = startIndex + query.length
+
+            // Bold style
+            spannable.setSpan(
+                android.text.style.StyleSpan(android.graphics.Typeface.BOLD),
+                startIndex, endIndex,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+
+            // Subtle background highlight (light gray)
+            spannable.setSpan(
+                android.text.style.BackgroundColorSpan(Color.parseColor("#D3D3D3")), // light gray
+                startIndex, endIndex,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+
+            startIndex = lowerText.indexOf(lowerQuery, endIndex)
+        }
+
+        return spannable
     }
+hun
 }
 
 
