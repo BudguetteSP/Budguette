@@ -1,4 +1,3 @@
-// ExpensesFragment.kt
 package com.example.budguette
 
 import android.content.Intent
@@ -16,12 +15,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 class ExpensesFragment : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
-    private lateinit var adapter: TransactionAdapter
-    private lateinit var transactionList: ArrayList<Transaction>
-
-    private lateinit var addButton: Button
-    private val db = FirebaseFirestore.getInstance()
-    private val auth = FirebaseAuth.getInstance()
+    private lateinit var transactionAdapter: TransactionAdapter
+    private val transactions = mutableListOf<Transaction>()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -30,40 +25,41 @@ class ExpensesFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_expenses, container, false)
 
         recyclerView = view.findViewById(R.id.recyclerView)
-        addButton = view.findViewById(R.id.addButton)
-
-        transactionList = ArrayList()
-        adapter = TransactionAdapter(transactionList)
-
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
-        recyclerView.adapter = adapter
+        transactionAdapter = TransactionAdapter(transactions)
+        recyclerView.adapter = transactionAdapter
 
+        loadTransactions()
+
+        val addButton: Button = view.findViewById(R.id.addButton)
         addButton.setOnClickListener {
             startActivity(Intent(requireContext(), AddTransactionActivity::class.java))
         }
 
-        fetchTransactions()
-
         return view
     }
 
-    private fun fetchTransactions() {
-        val userId = auth.currentUser?.uid ?: return
+    private fun loadTransactions() {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val db = FirebaseFirestore.getInstance()
 
-        db.collection("users").document(userId).collection("transactions")
-            .orderBy("date")
-            .addSnapshotListener { snapshot, e ->
-                if (e != null || snapshot == null) {
-                    return@addSnapshotListener
-                }
-
-                transactionList.clear()
-                for (doc in snapshot.documents) {
+        db.collection("users")
+            .document(userId)
+            .collection("transactions")
+            .orderBy("date", com.google.firebase.firestore.Query.Direction.DESCENDING)
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                transactions.clear()
+                for (doc in querySnapshot) {
                     val transaction = doc.toObject(Transaction::class.java)
-                    transaction?.let { transactionList.add(it) }
+                    transactions.add(transaction)
                 }
-                adapter.notifyDataSetChanged()
+                transactionAdapter.notifyDataSetChanged()
+            }
+            .addOnFailureListener { e ->
+                e.printStackTrace()
             }
     }
 }
+
 

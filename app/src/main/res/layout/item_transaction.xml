@@ -1,28 +1,36 @@
-<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:padding="16dp"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="12dp">
 
     <TextView
-        android:id="@+id/typeTextView"
-        android:textSize="18sp"
+        android:id="@+id/transactionName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Name"
         android:textStyle="bold"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:textSize="18sp" />
 
     <TextView
-        android:id="@+id/dateTextView"
+        android:id="@+id/transactionType"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:text="Deposit or Expense"
+        android:textColor="#666" />
 
     <TextView
-        android:id="@+id/costTextView"
-        android:textSize="16sp"
-        android:textColor="@android:color/holo_green_dark"
+        android:id="@+id/transactionDate"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:text="April 26, 2025" />
 
+    <TextView
+        android:id="@+id/transactionCost"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="$0.00"
+        android:textStyle="bold"
+        android:textSize="16sp" />
 </LinearLayout>

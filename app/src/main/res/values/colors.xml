@@ -7,6 +7,8 @@
     <color name="navy_blue">#001F3F</color>
     <color name="gold">#EDAE49</color>
     <color name="light_grey">#CCCCCC</color>
+    <color name="greenDeposit">#4CAF50</color>
+    <color name="redExpense">#F44336</color>
     <color name="transparent_white">#80FFFFFF</color> <!-- 50% transparent white -->
 
 
