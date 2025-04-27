@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -17,6 +18,7 @@ class ExpensesFragment : Fragment() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var transactionAdapter: TransactionAdapter
     private val transactions = mutableListOf<Transaction>()
+    private lateinit var searchView: SearchView
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -24,14 +26,27 @@ class ExpensesFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_expenses, container, false)
 
-        recyclerView = view.findViewById(R.id.recyclerView)
+        recyclerView = view.findViewById(R.id.recyclerViewTransactions)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         transactionAdapter = TransactionAdapter(transactions)
         recyclerView.adapter = transactionAdapter
-
         loadTransactions()
 
-        val addButton: Button = view.findViewById(R.id.addButton)
+        searchView = view.findViewById(R.id.searchView) as SearchView
+
+
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                return false
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                filterTransactions(newText)
+                return true
+            }
+        })
+
+        val addButton: Button = view.findViewById(R.id.addTransactionButton)
         addButton.setOnClickListener {
             startActivity(Intent(requireContext(), AddTransactionActivity::class.java))
         }
@@ -60,6 +75,19 @@ class ExpensesFragment : Fragment() {
                 e.printStackTrace()
             }
     }
+
+    private fun filterTransactions(query: String?) {
+        if (query.isNullOrEmpty()) {
+            transactionAdapter.updateList(transactions)
+        } else {
+            val filteredList = transactions.filter {
+                it.name.contains(query, ignoreCase = true) ||
+                        it.type.contains(query, ignoreCase = true)
+            }
+            transactionAdapter.updateList(filteredList)
+        }
+    }
+
 }
 
 

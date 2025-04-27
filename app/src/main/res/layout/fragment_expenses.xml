@@ -1,21 +1,26 @@
-<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="8dp">
 
     <Button
-        android:id="@+id/addButton"
+        android:id="@+id/addTransactionButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Add Transaction"
-        android:layout_gravity="center_horizontal"
-        android:layout_margin="16dp"/>
+        android:text="Add Transaction" />
+
+    <androidx.appcompat.widget.SearchView
+        android:id="@+id/searchView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:queryHint="Search transactions..." />
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerView"
+        android:id="@+id/recyclerViewTransactions"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
-
+        android:layout_height="0dp"
+        android:layout_weight="1" />
 </LinearLayout>
+
