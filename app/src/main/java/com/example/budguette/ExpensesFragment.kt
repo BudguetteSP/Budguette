@@ -21,7 +21,6 @@ class ExpensesFragment : Fragment() {
     private lateinit var searchView: SearchView
     private var currentQuery: String? = null
 
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -35,8 +34,6 @@ class ExpensesFragment : Fragment() {
         loadTransactions()
 
         searchView = view.findViewById(R.id.searchView) as SearchView
-
-
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 return false
@@ -51,6 +48,20 @@ class ExpensesFragment : Fragment() {
         val addButton: Button = view.findViewById(R.id.addTransactionButton)
         addButton.setOnClickListener {
             startActivity(Intent(requireContext(), AddTransactionActivity::class.java))
+        }
+
+        // Set the onItemClickListener to handle clicks on transactions
+        transactionAdapter.setOnItemClickListener { transaction ->
+            val intent = Intent(requireContext(), TransactionDetailActivity::class.java).apply {
+                putExtra("transactionId", transaction.id)
+                putExtra("userId", FirebaseAuth.getInstance().currentUser?.uid)
+                putExtra("name", transaction.name)
+                putExtra("type", transaction.type)
+                putExtra("date", android.text.format.DateFormat.format("MMM dd, yyyy", transaction.date).toString())
+                putExtra("cost", transaction.cost)
+                putExtra("notes", transaction.notes)
+            }
+            startActivity(intent)
         }
 
         return view
@@ -94,8 +105,7 @@ class ExpensesFragment : Fragment() {
             transactionAdapter.updateList(filteredList, query)
         }
     }
-
-
 }
+
 
 
