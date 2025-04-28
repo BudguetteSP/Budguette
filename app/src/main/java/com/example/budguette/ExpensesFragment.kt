@@ -82,7 +82,7 @@ class ExpensesFragment : Fragment() {
                     val transaction = doc.toObject(Transaction::class.java)
                     transactions.add(transaction)
                 }
-                transactionAdapter.notifyDataSetChanged()
+                filterTransactions(currentQuery) // 🧠 so that search results are preserved after reload
             }
             .addOnFailureListener { e ->
                 e.printStackTrace()
@@ -105,6 +105,12 @@ class ExpensesFragment : Fragment() {
             transactionAdapter.updateList(filteredList, query)
         }
     }
+
+    override fun onResume() {
+        super.onResume()
+        loadTransactions()
+    }
+
 }
 
 
