@@ -61,7 +61,10 @@ class TransactionDetailActivity : AppCompatActivity() {
     private fun saveNotes() {
         val newNotes = notesEditText.text.toString()
         val db = FirebaseFirestore.getInstance()
-        db.collection("transactions").document(transactionId)
+        db.collection("users")
+            .document(userId)
+            .collection("transactions")
+            .document(transactionId)
             .update("notes", newNotes)
             .addOnSuccessListener {
                 Toast.makeText(this, "Notes saved!", Toast.LENGTH_SHORT).show()
@@ -84,7 +87,10 @@ class TransactionDetailActivity : AppCompatActivity() {
 
     private fun deleteTransaction() {
         val db = FirebaseFirestore.getInstance()
-        db.collection("transactions").document(transactionId)
+        db.collection("users")
+            .document(userId)
+            .collection("transactions")
+            .document(transactionId)
             .delete()
             .addOnSuccessListener {
                 Toast.makeText(this, "Transaction deleted", Toast.LENGTH_SHORT).show()
@@ -95,3 +101,4 @@ class TransactionDetailActivity : AppCompatActivity() {
             }
     }
 }
+
