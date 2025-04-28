@@ -19,6 +19,8 @@ class ExpensesFragment : Fragment() {
     private lateinit var transactionAdapter: TransactionAdapter
     private val transactions = mutableListOf<Transaction>()
     private lateinit var searchView: SearchView
+    private var currentQuery: String? = null
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -77,16 +79,22 @@ class ExpensesFragment : Fragment() {
     }
 
     private fun filterTransactions(query: String?) {
+        currentQuery = query // Save current query for highlighting
+
         if (query.isNullOrEmpty()) {
-            transactionAdapter.updateList(transactions)
+            transactionAdapter.updateList(transactions, currentQuery)
         } else {
             val filteredList = transactions.filter {
                 it.name.contains(query, ignoreCase = true) ||
-                        it.type.contains(query, ignoreCase = true)
+                        it.type.contains(query, ignoreCase = true) ||
+                        android.text.format.DateFormat.format("MMM dd, yyyy", it.date)
+                            .toString()
+                            .contains(query, ignoreCase = true)
             }
-            transactionAdapter.updateList(filteredList)
+            transactionAdapter.updateList(filteredList, query)
         }
     }
+
 
 }
 
