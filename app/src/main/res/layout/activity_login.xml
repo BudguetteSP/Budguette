@@ -18,6 +18,16 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
+        <!-- Logo ImageView added here -->
+        <ImageView
+            android:id="@+id/logo_image"
+            android:layout_width="250dp"
+            android:layout_height="250dp"
+            android:src="@drawable/logo"
+            android:contentDescription="Logo"
+            android:layout_gravity="center"
+            android:layout_marginBottom="24dp" />
+
         <EditText
             android:id="@+id/email_edit_text"
             android:layout_width="match_parent"
@@ -65,8 +75,10 @@
             android:textColor="@color/light_grey"
             android:backgroundTint="@android:color/transparent"
             android:layout_marginTop="8dp" />
+
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
+
 
 
