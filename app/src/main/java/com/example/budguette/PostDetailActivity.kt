@@ -163,23 +163,35 @@ class PostDetailActivity : AppCompatActivity() {
     private fun postComment(commentText: String) {
         val currentUser = auth.currentUser ?: return
 
-        val comment = Comment(
-            text = commentText,
-            userId = currentUser.uid,
-            timestamp = System.currentTimeMillis()
-        )
+        db.collection("users").document(currentUser.uid).get()
+            .addOnSuccessListener { document ->
+                val userName = document.getString("name") ?: "Unknown User"
+                val profileImageUrl = document.getString("profileImageUrl") ?: ""
 
-        db.collection("posts")
-            .document(postId)
-            .collection("comments")
-            .add(comment)
-            .addOnSuccessListener {
-                commentEditText.text.clear()
+                val comment = Comment(
+                    text = commentText,
+                    userId = currentUser.uid,
+                    userName = userName,
+                    profileImageUrl = profileImageUrl,
+                    timestamp = System.currentTimeMillis()
+                )
+
+                db.collection("posts")
+                    .document(postId)
+                    .collection("comments")
+                    .add(comment)
+                    .addOnSuccessListener {
+                        commentEditText.text.clear()
+                    }
+                    .addOnFailureListener { e ->
+                        Toast.makeText(this, "Failed to post comment: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Failed to post comment: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Failed to fetch user info: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
+
 
     private fun performDelete(currentUid: String) {
         if (auth.currentUser?.uid != currentUid || currentUid != postUserId) {
