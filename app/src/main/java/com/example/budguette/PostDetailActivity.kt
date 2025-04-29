@@ -129,11 +129,17 @@ class PostDetailActivity : AppCompatActivity() {
 
     private fun setupCommentsRecyclerView() {
         commentsAdapter = CommentAdapter(commentsList)
+
+        commentsAdapter.onCommentLongClicked = { comment ->
+            showDeleteCommentDialog(comment)
+        }
+
         commentsRecyclerView.apply {
             layoutManager = LinearLayoutManager(this@PostDetailActivity)
             adapter = commentsAdapter
         }
     }
+
 
     private fun listenForComments() {
         db.collection("posts")
@@ -191,6 +197,38 @@ class PostDetailActivity : AppCompatActivity() {
                 Toast.makeText(this, "Failed to fetch user info: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
+
+    private fun showDeleteCommentDialog(comment: Comment) {
+        val dialogBuilder = AlertDialog.Builder(this)
+        dialogBuilder.setMessage("Delete this comment?")
+            .setCancelable(true)
+            .setPositiveButton("Delete") { dialog, id ->
+                deleteComment(comment)
+            }
+            .setNegativeButton("Cancel") { dialog, id ->
+                dialog.dismiss()
+            }
+
+        val alert = dialogBuilder.create()
+        alert.show()
+    }
+
+    private fun deleteComment(comment: Comment) {
+        db.collection("posts")
+            .document(postId)
+            .collection("comments")
+            .whereEqualTo("timestamp", comment.timestamp)
+            .get()
+            .addOnSuccessListener { documents ->
+                for (doc in documents) {
+                    doc.reference.delete()
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Failed to delete comment: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
 
 
     private fun performDelete(currentUid: String) {

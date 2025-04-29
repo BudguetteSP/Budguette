@@ -7,9 +7,12 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.google.firebase.auth.FirebaseAuth
 
 class CommentAdapter(private val comments: List<Comment>) :
     RecyclerView.Adapter<CommentAdapter.CommentViewHolder>() {
+
+    var onCommentLongClicked: ((Comment) -> Unit)? = null
 
     inner class CommentViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val profileImage: ImageView = view.findViewById(R.id.comment_user_image)
@@ -33,7 +36,19 @@ class CommentAdapter(private val comments: List<Comment>) :
             .placeholder(R.drawable.ic_defaultprofile_background)
             .circleCrop()
             .into(holder.profileImage)
+
+        val auth = FirebaseAuth.getInstance()
+        val currentUser = auth.currentUser
+
+        // Allow delete only for own comments
+        if (currentUser != null && comment.userId == currentUser.uid) {
+            holder.itemView.setOnLongClickListener {
+                onCommentLongClicked?.invoke(comment)
+                true
+            }
+        }
     }
+
 
     override fun getItemCount() = comments.size
 }
