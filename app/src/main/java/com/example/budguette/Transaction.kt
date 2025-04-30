@@ -7,6 +7,8 @@ data class Transaction(
     val name: String = "",
     val date: Long = 0L,
     val cost: Double = 0.0,
-    val notes: String = ""   // <-- ADD THIS
+    val notes: String = "",
+    val category: String = ""
 )
+
 

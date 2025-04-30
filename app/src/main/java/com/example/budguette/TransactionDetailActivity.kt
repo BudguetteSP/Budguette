@@ -1,6 +1,7 @@
 package com.example.budguette
 
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -18,7 +19,7 @@ class TransactionDetailActivity : AppCompatActivity() {
     private lateinit var notesEditText: EditText
     private lateinit var saveNotesButton: Button
     private lateinit var deleteButton: Button
-
+    private lateinit var categoryTextView: TextView
     private lateinit var transactionId: String
     private lateinit var userId: String
 
@@ -26,6 +27,7 @@ class TransactionDetailActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_transaction_detail)
 
+        // Initialize views
         nameTextView = findViewById(R.id.nameTextView)
         typeTextView = findViewById(R.id.typeTextView)
         dateTextView = findViewById(R.id.dateTextView)
@@ -33,7 +35,9 @@ class TransactionDetailActivity : AppCompatActivity() {
         notesEditText = findViewById(R.id.notesEditText)
         saveNotesButton = findViewById(R.id.saveNotesButton)
         deleteButton = findViewById(R.id.deleteButton)
+        categoryTextView = findViewById(R.id.categoryTextView)
 
+        // Get intent extras
         transactionId = intent.getStringExtra("transactionId") ?: ""
         userId = intent.getStringExtra("userId") ?: ""
 
@@ -42,12 +46,22 @@ class TransactionDetailActivity : AppCompatActivity() {
         val date = intent.getStringExtra("date")
         val cost = intent.getDoubleExtra("cost", 0.0)
         val notes = intent.getStringExtra("notes") ?: ""
+        val category = intent.getStringExtra("category")
 
+        // Set data to views
         nameTextView.text = "Name: $name"
         typeTextView.text = "Type: $type"
         dateTextView.text = "Date: $date"
         costTextView.text = "Cost: $${String.format("%.2f", cost)}"
         notesEditText.setText(notes)
+
+        // Show category if it's an expense
+        if (type == "Expense" && !category.isNullOrEmpty()) {
+            categoryTextView.visibility = View.VISIBLE
+            categoryTextView.text = "Category: $category"
+        } else {
+            categoryTextView.visibility = View.GONE
+        }
 
         saveNotesButton.setOnClickListener {
             saveNotes()
@@ -94,11 +108,12 @@ class TransactionDetailActivity : AppCompatActivity() {
             .delete()
             .addOnSuccessListener {
                 Toast.makeText(this, "Transaction deleted", Toast.LENGTH_SHORT).show()
-                finish() // Close this page
+                finish()
             }
             .addOnFailureListener {
                 Toast.makeText(this, "Failed to delete", Toast.LENGTH_SHORT).show()
             }
     }
 }
+
 

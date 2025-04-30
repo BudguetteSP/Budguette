@@ -60,9 +60,11 @@ class ExpensesFragment : Fragment() {
                 putExtra("date", android.text.format.DateFormat.format("MMM dd, yyyy", transaction.date).toString())
                 putExtra("cost", transaction.cost)
                 putExtra("notes", transaction.notes)
+                putExtra("category", transaction.category) // ✅ ADD THIS LINE
             }
             startActivity(intent)
         }
+
 
         return view
     }
