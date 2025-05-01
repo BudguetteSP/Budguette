@@ -8,4 +8,12 @@
     <string name="enter_your_bio">Enter your bio</string>
     <string name="save_bio">Save Bio</string>
     <string name="log_out">Log Out</string>
+
+    <string-array name="subscription_frequencies">
+        <item>Monthly</item>
+        <item>Yearly</item>
+        <item>Weekly</item>
+        <item>One-Time</item>
+    </string-array>
+
 </resources>
