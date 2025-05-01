@@ -30,5 +30,28 @@
         android:layout_marginTop="8dp"
         android:layout_marginBottom="32dp" />
 
+    <TextView
+        android:id="@+id/totalSubscriptionsTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Total Subscriptions"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/gold"
+        android:gravity="center"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:id="@+id/subscriptionBreakdownTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Subscription Breakdown"
+        android:textSize="18sp"
+        android:textColor="@color/white"
+        android:gravity="center"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="32dp" />
+
+
 </LinearLayout>
 

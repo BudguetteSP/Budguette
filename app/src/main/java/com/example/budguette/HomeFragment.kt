@@ -9,11 +9,12 @@ import android.widget.TextView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
-
 class HomeFragment : Fragment() {
 
     private lateinit var totalExpensesTextView: TextView
     private lateinit var categoryBreakdownTextView: TextView
+    private lateinit var totalSubscriptionsTextView: TextView
+    private lateinit var subscriptionBreakdownTextView: TextView
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -21,10 +22,14 @@ class HomeFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_home, container, false)
 
+        // Initialize TextViews
         totalExpensesTextView = view.findViewById(R.id.totalExpensesTextView)
         categoryBreakdownTextView = view.findViewById(R.id.categoryBreakdownTextView)
+        totalSubscriptionsTextView = view.findViewById(R.id.totalSubscriptionsTextView)
+        subscriptionBreakdownTextView = view.findViewById(R.id.subscriptionBreakdownTextView)
 
         loadExpenseSummary()
+        loadSubscriptionSummary()
 
         return view
     }
@@ -50,7 +55,7 @@ class HomeFragment : Fragment() {
                     categoryMap[category] = categoryMap.getOrDefault(category, 0.0) + cost
                 }
 
-                // Update total
+                // Update total expenses
                 totalExpensesTextView.text = "Total Expenses: $${"%.2f".format(totalCost)}"
 
                 // Update category breakdown
@@ -64,4 +69,39 @@ class HomeFragment : Fragment() {
                 categoryBreakdownTextView.text = ""
             }
     }
+
+    private fun loadSubscriptionSummary() {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val db = FirebaseFirestore.getInstance()
+
+        db.collection("subscriptions")
+            .whereEqualTo("userId", userId)
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                var totalCost = 0.0
+                val frequencyMap = mutableMapOf<String, Double>()
+
+                for (doc in querySnapshot) {
+                    val cost = doc.getDouble("amount") ?: 0.0
+                    val frequency = doc.getString("frequency") ?: "Unknown"
+
+                    totalCost += cost
+                    frequencyMap[frequency] = frequencyMap.getOrDefault(frequency, 0.0) + cost
+                }
+
+                // Update total subscriptions
+                totalSubscriptionsTextView.text = "Total Subscriptions: $${"%.2f".format(totalCost)}"
+
+                // Update frequency breakdown
+                val breakdown = frequencyMap.entries.joinToString("\n") { (frequency, sum) ->
+                    "$frequency: $${"%.2f".format(sum)}"
+                }
+                subscriptionBreakdownTextView.text = breakdown
+            }
+            .addOnFailureListener {
+                totalSubscriptionsTextView.text = "Failed to load subscriptions."
+                subscriptionBreakdownTextView.text = ""
+            }
+    }
 }
+
