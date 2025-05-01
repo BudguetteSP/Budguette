@@ -56,7 +56,6 @@ class SubscriptionsFragment : Fragment() {
             .orderBy("startDate", Query.Direction.ASCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    Toast.makeText(context, "Failed to load subscriptions", Toast.LENGTH_SHORT).show()
                     return@addSnapshotListener
                 }
                 subscriptions.clear()
