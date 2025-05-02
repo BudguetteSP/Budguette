@@ -1,50 +1,71 @@
-<?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/navy_blue"
+    android:padding="24dp">
 
     <LinearLayout
         android:orientation="vertical"
-        android:padding="16dp"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal">
 
         <EditText
             android:id="@+id/subscriptionNameEditText"
             android:hint="Subscription Name"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:textColorHint="@color/transparent_white"
+            android:backgroundTint="@color/light_grey"
+            android:padding="12dp"
+            android:layout_marginBottom="16dp" />
 
         <EditText
             android:id="@+id/subscriptionCostEditText"
             android:hint="Cost (e.g., 9.99)"
             android:inputType="numberDecimal"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:textColorHint="@color/transparent_white"
+            android:backgroundTint="@color/light_grey"
+            android:padding="12dp"
+            android:layout_marginBottom="16dp" />
 
         <Spinner
             android:id="@+id/subscriptionFrequencySpinner"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp" />
 
         <Button
             android:id="@+id/selectDateButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Select Date" />
-
+            android:text="Select Due Date"
+            android:backgroundTint="@color/black"
+            android:textColor="@color/white" />
 
         <EditText
             android:id="@+id/subscriptionNotesEditText"
             android:hint="Notes (optional)"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:textColorHint="@color/transparent_white"
+            android:backgroundTint="@color/light_grey"
+            android:padding="12dp"
+            android:layout_marginTop="16dp" />
 
         <Button
             android:id="@+id/saveSubscriptionButton"
             android:text="Save Subscription"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"/>
+            android:backgroundTint="@color/gold"
+            android:textColor="@color/navy_blue"
+            android:layout_marginTop="24dp" />
     </LinearLayout>
 </ScrollView>
+

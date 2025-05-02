@@ -1,9 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="horizontal"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="12dp">
+    android:padding="12dp"
+    android:background="#FFFFFF">
 
     <ImageView
         android:id="@+id/profile_image"
@@ -11,7 +11,8 @@
         android:layout_height="48dp"
         android:scaleType="centerCrop"
         android:layout_marginEnd="12dp"
-        android:src="@drawable/ic_defaultprofile_background" />
+        android:src="@drawable/ic_defaultprofile_background"
+        android:clipToOutline="true" />
 
     <LinearLayout
         android:orientation="vertical"
@@ -19,13 +20,12 @@
         android:layout_height="wrap_content"
         android:layout_weight="1">
 
-        <!-- This is the missing TextView that caused your error -->
         <TextView
             android:id="@+id/user_name"
             android:text="User Name"
             android:textStyle="bold"
             android:textSize="16sp"
-            android:textColor="@android:color/black"
+            android:textColor="#000000"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
@@ -34,6 +34,7 @@
             android:text="Post Title"
             android:textStyle="bold"
             android:textSize="14sp"
+            android:textColor="#B6862C"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
@@ -41,7 +42,9 @@
             android:id="@+id/post_caption"
             android:text="Post Caption"
             android:textSize="14sp"
+            android:textColor="#444444"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
     </LinearLayout>
 </LinearLayout>
+

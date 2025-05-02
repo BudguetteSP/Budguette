@@ -1,9 +1,8 @@
-<?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="24dp"
-    android:background="@android:color/white">
+    android:background="@color/navy_blue">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -19,7 +18,7 @@
             android:textSize="24sp"
             android:textStyle="bold"
             android:layout_marginBottom="32dp"
-            android:textColor="@android:color/black" />
+            android:textColor="@color/gold" />
 
         <EditText
             android:id="@+id/post_title"
@@ -28,7 +27,9 @@
             android:hint="Title"
             android:inputType="textCapWords"
             android:padding="12dp"
-            android:background="@android:drawable/edit_text"
+            android:textColor="@color/white"
+            android:textColorHint="@color/transparent_white"
+            android:backgroundTint="@color/light_grey"
             android:layout_marginBottom="20dp" />
 
         <EditText
@@ -39,7 +40,9 @@
             android:gravity="top"
             android:inputType="textMultiLine"
             android:padding="12dp"
-            android:background="@android:drawable/edit_text"
+            android:textColor="@color/white"
+            android:textColorHint="@color/transparent_white"
+            android:backgroundTint="@color/light_grey"
             android:layout_marginBottom="32dp" />
 
         <Button
@@ -48,7 +51,8 @@
             android:layout_height="wrap_content"
             android:text="Post"
             android:padding="12dp"
-            android:backgroundTint="#003D5B"
-            android:textColor="#FFFFFF"/>
+            android:backgroundTint="@color/gold"
+            android:textColor="@color/navy_blue"/>
     </LinearLayout>
 </ScrollView>
+

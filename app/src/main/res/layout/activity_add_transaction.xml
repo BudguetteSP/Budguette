@@ -1,53 +1,67 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:padding="24dp"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/navy_blue"
+    android:padding="24dp">
 
-    <Spinner
-        android:id="@+id/typeSpinner"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
-
-    <Spinner
-        android:id="@+id/categorySpinner"
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:visibility="gone"
-        android:layout_marginTop="16dp"/>
+        android:gravity="center_horizontal">
 
+        <Spinner
+            android:id="@+id/typeSpinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp" />
 
-    <EditText
-        android:id="@+id/nameEditText"
-        android:hint="Enter Name (e.g., Rent, Paycheck)"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"/>
+        <Spinner
+            android:id="@+id/categorySpinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:layout_marginBottom="16dp" />
 
-    <Button
-        android:id="@+id/dateButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Select Date"
-        android:layout_marginTop="16dp"/>
+        <EditText
+            android:id="@+id/nameEditText"
+            android:hint="Enter Name (e.g., Rent, Paycheck)"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:textColorHint="@color/transparent_white"
+            android:backgroundTint="@color/light_grey"
+            android:padding="12dp"
+            android:layout_marginBottom="16dp" />
 
-    <EditText
-        android:id="@+id/costEditText"
-        android:hint="Enter Cost"
-        android:inputType="numberDecimal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"/>
+        <Button
+            android:id="@+id/dateButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Select Date"
+            android:backgroundTint="@color/black"
+            android:textColor="@color/white"
+            android:layout_marginBottom="16dp" />
 
-    <Button
-        android:id="@+id/saveButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Save Transaction"
-        android:layout_marginTop="24dp"/>
+        <EditText
+            android:id="@+id/costEditText"
+            android:hint="Enter Cost"
+            android:inputType="numberDecimal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:textColorHint="@color/transparent_white"
+            android:backgroundTint="@color/light_grey"
+            android:padding="12dp"
+            android:layout_marginBottom="24dp" />
 
+        <Button
+            android:id="@+id/saveButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Save Transaction"
+            android:backgroundTint="@color/gold"
+            android:textColor="@color/navy_blue" />
+    </LinearLayout>
+</ScrollView>
 
-
-</LinearLayout>

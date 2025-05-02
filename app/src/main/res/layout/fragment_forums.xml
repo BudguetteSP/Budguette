@@ -1,19 +1,17 @@
-<?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ForumsFragment">
+    android:background="@color/white">
 
-    <!-- Search bar at the top -->
+    <!-- Search bar -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="8dp"
-        android:background="@android:color/white"
+        android:background="@color/light_grey"
         android:elevation="4dp">
 
         <androidx.appcompat.widget.SearchView
@@ -23,14 +21,12 @@
             android:queryHint="Search posts..." />
     </LinearLayout>
 
-    <!-- SwipeRefreshLayout wraps the RecyclerView -->
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipe_refresh_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="56dp"> <!-- space below search bar -->
+        android:layout_marginTop="56dp">
 
-        <!-- RecyclerView inside SwipeRefreshLayout -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/posts_recycler_view"
             android:layout_width="match_parent"
@@ -39,7 +35,6 @@
             android:paddingBottom="100dp" />
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-    <!-- FloatingActionButton anchored properly -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/create_post_button"
         android:layout_width="wrap_content"
@@ -48,10 +43,8 @@
         android:layout_margin="16dp"
         android:contentDescription="Create Post"
         android:src="@drawable/baseline_add_24"
-        app:layout_anchorGravity="bottom|end"
         app:backgroundTint="@color/navy_blue"
         app:tint="@android:color/white" />
-
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
 
