@@ -1,7 +1,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/navy_blue"
+    android:background="@color/white"
     android:padding="24dp">
 
     <LinearLayout
@@ -29,8 +29,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="@color/white"
-            android:textColorHint="@color/transparent_white"
-            android:backgroundTint="@color/light_grey"
+            android:textColorHint="@color/black"
+            android:backgroundTint="@color/black"
             android:padding="12dp"
             android:layout_marginBottom="16dp" />
 
@@ -49,9 +49,9 @@
             android:inputType="numberDecimal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/white"
-            android:textColorHint="@color/transparent_white"
-            android:backgroundTint="@color/light_grey"
+            android:textColor="@color/black"
+            android:textColorHint="@color/black"
+            android:backgroundTint="@color/black"
             android:padding="12dp"
             android:layout_marginBottom="24dp" />
 

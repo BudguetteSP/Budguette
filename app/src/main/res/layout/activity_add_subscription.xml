@@ -1,7 +1,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/navy_blue"
+    android:background="@color/white"
     android:padding="24dp">
 
     <LinearLayout
@@ -15,8 +15,8 @@
             android:hint="Subscription Name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/white"
-            android:textColorHint="@color/transparent_white"
+            android:textColor="@color/black"
+            android:textColorHint="@color/light_grey"
             android:backgroundTint="@color/light_grey"
             android:padding="12dp"
             android:layout_marginBottom="16dp" />
@@ -27,8 +27,8 @@
             android:inputType="numberDecimal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/white"
-            android:textColorHint="@color/transparent_white"
+            android:textColor="@color/black"
+            android:textColorHint="@color/light_grey"
             android:backgroundTint="@color/light_grey"
             android:padding="12dp"
             android:layout_marginBottom="16dp" />
@@ -52,8 +52,8 @@
             android:hint="Notes (optional)"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/white"
-            android:textColorHint="@color/transparent_white"
+            android:textColor="@color/black"
+            android:textColorHint="@color/light_grey"
             android:backgroundTint="@color/light_grey"
             android:padding="12dp"
             android:layout_marginTop="16dp" />
