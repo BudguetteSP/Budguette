@@ -28,9 +28,9 @@
             android:hint="Enter Name (e.g., Rent, Paycheck)"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/white"
-            android:textColorHint="@color/black"
-            android:backgroundTint="@color/black"
+            android:textColor="@color/black"
+            android:textColorHint="@color/light_grey"
+            android:backgroundTint="@color/light_grey"
             android:padding="12dp"
             android:layout_marginBottom="16dp" />
 
@@ -50,8 +50,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="@color/black"
-            android:textColorHint="@color/black"
-            android:backgroundTint="@color/black"
+            android:textColorHint="@color/light_grey"
+            android:backgroundTint="@color/light_grey"
             android:padding="12dp"
             android:layout_marginBottom="24dp" />
 
