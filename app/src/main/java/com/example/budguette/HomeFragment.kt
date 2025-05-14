@@ -130,10 +130,53 @@ class HomeFragment : Fragment() {
 
     private fun updatePieChart(pieChart: PieChart, entries: List<PieEntry>) {
         val dataSet = PieDataSet(entries, "")
-        val pieData = PieData(dataSet)
-        pieChart.data = pieData
-        pieChart.invalidate()  // Refresh the pie chart
+
+        // Use themed colors
+        val chartColors = listOf(
+            android.graphics.Color.parseColor("#FFD700"), // gold
+            android.graphics.Color.parseColor("#D3D3D3"), // light grey
+            android.graphics.Color.parseColor("#FFFFFF"), // white
+            android.graphics.Color.parseColor("#000000"), // black
+            android.graphics.Color.parseColor("#0A1F44")  // navy blue
+        )
+        dataSet.colors = chartColors
+
+        // Value appearance
+        dataSet.valueTextColor = android.graphics.Color.BLACK
+        dataSet.valueTextSize = 14f
+
+        val data = PieData(dataSet)
+        pieChart.data = data
+
+        // Center hole color and text
+        pieChart.setUsePercentValues(false)
+        pieChart.description.isEnabled = false
+        pieChart.setDrawEntryLabels(true)
+        pieChart.setEntryLabelColor(android.graphics.Color.BLACK)
+        pieChart.setEntryLabelTextSize(12f)
+
+        // Center styling
+        pieChart.isDrawHoleEnabled = true
+        pieChart.setHoleColor(android.graphics.Color.parseColor("#0A1F44")) // navy blue
+        pieChart.holeRadius = 45f
+        pieChart.transparentCircleRadius = 50f
+
+        // Legend styling
+        val legend = pieChart.legend
+        legend.isEnabled = true
+        legend.textColor = android.graphics.Color.WHITE
+        legend.textSize = 12f
+        legend.form = com.github.mikephil.charting.components.Legend.LegendForm.CIRCLE
+        legend.verticalAlignment = com.github.mikephil.charting.components.Legend.LegendVerticalAlignment.BOTTOM
+        legend.horizontalAlignment = com.github.mikephil.charting.components.Legend.LegendHorizontalAlignment.CENTER
+
+        // Animate
+        pieChart.animateY(1000)
+
+        // Refresh
+        pieChart.invalidate()
     }
+
 }
 
 
