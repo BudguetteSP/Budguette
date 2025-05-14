@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.*
 import android.widget.Toast
+import android.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -17,11 +18,8 @@ class SubscriptionsFragment : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: SubscriptionAdapter
-    private val subscriptions = mutableListOf<Subscription>()
-
     private val auth by lazy { FirebaseAuth.getInstance() }
-    private val db   by lazy { FirebaseFirestore.getInstance() }
-
+    private val db by lazy { FirebaseFirestore.getInstance() }
     private var listener: ListenerRegistration? = null
 
     override fun onCreateView(
@@ -30,45 +28,54 @@ class SubscriptionsFragment : Fragment() {
     ): View {
         val view = inflater.inflate(R.layout.fragment_subscriptions, container, false)
 
-        // RecyclerView & adapter
+        // Set up RecyclerView
         recyclerView = view.findViewById(R.id.subscriptionRecyclerView)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
-        adapter = SubscriptionAdapter(subscriptions) { subscription, newDate ->
+
+        adapter = SubscriptionAdapter { subscription, newDate ->
             updateSubscriptionDate(subscription, newDate)
         }
+
         recyclerView.adapter = adapter
 
-        // FAB to add new subscription
-        view.findViewById<FloatingActionButton>(R.id.addSubscriptionFab)
-            .setOnClickListener {
-                startActivity(Intent(requireContext(), AddSubscriptionActivity::class.java))
+        // Set up FAB to add new subscription
+        view.findViewById<FloatingActionButton>(R.id.addSubscriptionFab).setOnClickListener {
+            startActivity(Intent(requireContext(), AddSubscriptionActivity::class.java))
+        }
+
+        // Set up SearchView
+        val searchView = view.findViewById<SearchView>(R.id.subscription_search_view)
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean = false
+            override fun onQueryTextChange(newText: String?): Boolean {
+                adapter.filter.filter(newText)
+                return true
             }
+        })
 
         return view
     }
 
     override fun onStart() {
         super.onStart()
-        // Attach real-time listener
         val userId = auth.currentUser?.uid ?: return
+
         listener = db.collection("subscriptions")
             .whereEqualTo("userId", userId)
             .orderBy("startDate", Query.Direction.ASCENDING)
             .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    return@addSnapshotListener
-                }
-                subscriptions.clear()
-                snapshot?.documents?.forEach { doc ->
-                    doc.toObject(Subscription::class.java)?.let { subscriptions.add(it) }
-                }
-                adapter.notifyDataSetChanged()
+                if (error != null) return@addSnapshotListener
+
+                val updatedList = snapshot?.documents?.mapNotNull {
+                    it.toObject(Subscription::class.java)
+                } ?: emptyList()
+
+                adapter.setSubscriptions(updatedList)
             }
     }
 
     override fun onStop() {
         super.onStop()
-        // Detach listener to avoid leaks
         listener?.remove()
     }
 
@@ -84,6 +91,3 @@ class SubscriptionsFragment : Fragment() {
             }
     }
 }
-
-
-

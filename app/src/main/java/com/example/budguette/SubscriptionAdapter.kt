@@ -1,16 +1,23 @@
 package com.example.budguette
 
+import android.app.DatePickerDialog
+import android.content.Context
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Filter
+import android.widget.Filterable
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import android.app.DatePickerDialog
-import android.content.Context
 import java.util.*
 
-class SubscriptionAdapter(private val subscriptions: List<Subscription>, private val onDueDateSelected: (Subscription, String) -> Unit) :
-    RecyclerView.Adapter<SubscriptionAdapter.SubscriptionViewHolder>() {
+class SubscriptionAdapter(
+    private val onDueDateSelected: (Subscription, String) -> Unit
+) : RecyclerView.Adapter<SubscriptionAdapter.SubscriptionViewHolder>(), Filterable {
+
+    private val originalList: MutableList<Subscription> = mutableListOf()
+    private var filteredList: MutableList<Subscription> = mutableListOf()
 
     inner class SubscriptionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val nameText: TextView = itemView.findViewById(R.id.subscriptionName)
@@ -26,27 +33,64 @@ class SubscriptionAdapter(private val subscriptions: List<Subscription>, private
     }
 
     override fun onBindViewHolder(holder: SubscriptionViewHolder, position: Int) {
-        val subscription = subscriptions[position]
+        val subscription = filteredList[position]
         holder.nameText.text = subscription.name
         holder.costText.text = "Cost: $${subscription.amount}"
-        holder.dueText.text = "Due: ${subscription.startDate}"  // assuming dueDate is the startDate
+        holder.dueText.text = "Due: ${subscription.startDate}"
+        holder.notesText.text = "Notes: ${subscription.notes}"
 
         holder.dueText.setOnClickListener {
-            // Show the DatePickerDialog when the user clicks on the due date
             showDatePickerDialog(holder.dueText.context, subscription) { selectedDate ->
-                // Update the TextView with the selected date
                 holder.dueText.text = "Due: $selectedDate"
-                // Callback to pass the selected date back to the activity/fragment
                 onDueDateSelected(subscription, selectedDate)
             }
         }
 
-        holder.notesText.text = "Notes: ${subscription.notes}"
+        holder.itemView.setOnClickListener {
+            val context = holder.itemView.context
+            val intent = Intent(context, SubscriptionDetailActivity::class.java)
+            intent.putExtra("subscription", subscription)
+            context.startActivity(intent)
+        }
     }
 
-    override fun getItemCount(): Int = subscriptions.size
+    override fun getItemCount(): Int = filteredList.size
 
-    // Function to show the DatePickerDialog
+    fun setSubscriptions(newList: List<Subscription>) {
+        originalList.clear()
+        originalList.addAll(newList)
+
+        filteredList.clear()
+        filteredList.addAll(newList)
+
+        notifyDataSetChanged()
+    }
+
+    override fun getFilter(): Filter {
+        return object : Filter() {
+            override fun performFiltering(query: CharSequence?): FilterResults {
+                val resultList = if (query.isNullOrEmpty()) {
+                    originalList
+                } else {
+                    val lowerQuery = query.toString().lowercase(Locale.getDefault())
+                    originalList.filter {
+                        it.name.lowercase(Locale.getDefault()).contains(lowerQuery)
+                    }
+                }
+
+                val filterResults = FilterResults()
+                filterResults.values = resultList
+                return filterResults
+            }
+
+            @Suppress("UNCHECKED_CAST")
+            override fun publishResults(query: CharSequence?, results: FilterResults?) {
+                filteredList = (results?.values as? List<Subscription>)?.toMutableList() ?: mutableListOf()
+                notifyDataSetChanged()
+            }
+        }
+    }
+
     private fun showDatePickerDialog(context: Context, subscription: Subscription, onDateSelected: (String) -> Unit) {
         val calendar = Calendar.getInstance()
         val year = calendar.get(Calendar.YEAR)
@@ -56,7 +100,6 @@ class SubscriptionAdapter(private val subscriptions: List<Subscription>, private
         val datePickerDialog = DatePickerDialog(
             context,
             { _, selectedYear, selectedMonth, selectedDayOfMonth ->
-                // Format the selected date
                 val formattedDate = "$selectedYear-${(selectedMonth + 1).toString().padStart(2, '0')}-${selectedDayOfMonth.toString().padStart(2, '0')}"
                 onDateSelected(formattedDate)
             },
@@ -65,5 +108,7 @@ class SubscriptionAdapter(private val subscriptions: List<Subscription>, private
         datePickerDialog.show()
     }
 }
+
+
 
 
