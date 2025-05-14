@@ -4,10 +4,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
 import android.widget.TextView
+import androidx.fragment.app.Fragment
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.github.mikephil.charting.charts.PieChart
+import com.github.mikephil.charting.data.PieData
+import com.github.mikephil.charting.data.PieDataSet
+import com.github.mikephil.charting.data.PieEntry
 
 class HomeFragment : Fragment() {
 
@@ -15,6 +19,8 @@ class HomeFragment : Fragment() {
     private lateinit var categoryBreakdownTextView: TextView
     private lateinit var totalSubscriptionsTextView: TextView
     private lateinit var subscriptionBreakdownTextView: TextView
+    private lateinit var expensePieChart: PieChart
+    private lateinit var subscriptionPieChart: PieChart
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -27,6 +33,10 @@ class HomeFragment : Fragment() {
         categoryBreakdownTextView = view.findViewById(R.id.categoryBreakdownTextView)
         totalSubscriptionsTextView = view.findViewById(R.id.totalSubscriptionsTextView)
         subscriptionBreakdownTextView = view.findViewById(R.id.subscriptionBreakdownTextView)
+
+        // Initialize PieCharts
+        expensePieChart = view.findViewById(R.id.expensePieChart)
+        subscriptionPieChart = view.findViewById(R.id.subscriptionPieChart)
 
         loadExpenseSummary()
         loadSubscriptionSummary()
@@ -46,6 +56,7 @@ class HomeFragment : Fragment() {
             .addOnSuccessListener { querySnapshot ->
                 var totalCost = 0.0
                 val categoryMap = mutableMapOf<String, Double>()
+                val pieEntries = mutableListOf<PieEntry>()
 
                 for (doc in querySnapshot) {
                     val cost = doc.getDouble("cost") ?: 0.0
@@ -63,6 +74,12 @@ class HomeFragment : Fragment() {
                     "$category: $${"%.2f".format(sum)}"
                 }
                 categoryBreakdownTextView.text = breakdown
+
+                // Update Pie Chart
+                categoryMap.entries.forEach {
+                    pieEntries.add(PieEntry(it.value.toFloat(), it.key))
+                }
+                updatePieChart(expensePieChart, pieEntries)
             }
             .addOnFailureListener {
                 totalExpensesTextView.text = "Failed to load expenses."
@@ -80,6 +97,7 @@ class HomeFragment : Fragment() {
             .addOnSuccessListener { querySnapshot ->
                 var totalCost = 0.0
                 val frequencyMap = mutableMapOf<String, Double>()
+                val pieEntries = mutableListOf<PieEntry>()
 
                 for (doc in querySnapshot) {
                     val cost = doc.getDouble("amount") ?: 0.0
@@ -97,11 +115,25 @@ class HomeFragment : Fragment() {
                     "$frequency: $${"%.2f".format(sum)}"
                 }
                 subscriptionBreakdownTextView.text = breakdown
+
+                // Update Pie Chart
+                frequencyMap.entries.forEach {
+                    pieEntries.add(PieEntry(it.value.toFloat(), it.key))
+                }
+                updatePieChart(subscriptionPieChart, pieEntries)
             }
             .addOnFailureListener {
                 totalSubscriptionsTextView.text = "Failed to load subscriptions."
                 subscriptionBreakdownTextView.text = ""
             }
     }
+
+    private fun updatePieChart(pieChart: PieChart, entries: List<PieEntry>) {
+        val dataSet = PieDataSet(entries, "")
+        val pieData = PieData(dataSet)
+        pieChart.data = pieData
+        pieChart.invalidate()  // Refresh the pie chart
+    }
 }
+
 
