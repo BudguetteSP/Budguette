@@ -3,6 +3,7 @@ package com.example.budguette
 import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
+import android.text.TextUtils
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
@@ -39,30 +40,38 @@ class SignUpActivity : AppCompatActivity() {
         signUpButton.setOnClickListener { createAccount() }
 
         dobEditText.setOnClickListener {
-            val calendar = Calendar.getInstance()
-            val year = calendar.get(Calendar.YEAR)
-            val month = calendar.get(Calendar.MONTH)
-            val day = calendar.get(Calendar.DAY_OF_MONTH)
-
-            val datePickerDialog = DatePickerDialog(this,
-                { _, selectedYear, selectedMonth, selectedDay ->
-                    // Format as MM/DD/YYYY
-                    val selectedDate = "${selectedMonth + 1}/$selectedDay/$selectedYear"
-                    dobEditText.setText(selectedDate)
-                }, year, month, day
-            )
-            datePickerDialog.show()
+            showDatePicker()
         }
     }
 
+    private fun showDatePicker() {
+        val calendar = Calendar.getInstance()
+        val year = calendar.get(Calendar.YEAR)
+        val month = calendar.get(Calendar.MONTH)
+        val day = calendar.get(Calendar.DAY_OF_MONTH)
+
+        val datePickerDialog = DatePickerDialog(
+            this,
+            { _, selectedYear, selectedMonth, selectedDay ->
+                val selectedDate = String.format("%02d/%02d/%04d", selectedMonth + 1, selectedDay, selectedYear)
+                dobEditText.setText(selectedDate)
+            },
+            year, month, day
+        )
+        datePickerDialog.show()
+    }
+
     private fun createAccount() {
-        val fullName = fullNameEditText.text.toString()
-        val email = emailEditText.text.toString()
-        val dob = dobEditText.text.toString()
+        val fullName = fullNameEditText.text.toString().trim()
+        val email = emailEditText.text.toString().trim()
+        val dob = dobEditText.text.toString().trim()
         val password = passwordEditText.text.toString()
         val confirmPassword = confirmPasswordEditText.text.toString()
 
-        if (fullName.isEmpty() || email.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
+        // Validation
+        if (TextUtils.isEmpty(fullName) || TextUtils.isEmpty(email) ||
+            TextUtils.isEmpty(dob) || TextUtils.isEmpty(password) ||
+            TextUtils.isEmpty(confirmPassword)) {
             Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show()
             return
         }
@@ -72,12 +81,17 @@ class SignUpActivity : AppCompatActivity() {
             return
         }
 
+        if (password.length < 6) {
+            Toast.makeText(this, "Password should be at least 6 characters", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Firebase Sign Up
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
                     val userId = auth.currentUser?.uid ?: return@addOnCompleteListener
 
-                    // Save extra user data to Firestore
                     val user = hashMapOf(
                         "name" to fullName,
                         "email" to email,
@@ -86,7 +100,7 @@ class SignUpActivity : AppCompatActivity() {
                         "profileImageUrl" to ""
                     )
 
-                    FirebaseFirestore.getInstance().collection("users").document(userId)
+                    firestore.collection("users").document(userId)
                         .set(user)
                         .addOnSuccessListener {
                             Toast.makeText(this, "Account created successfully", Toast.LENGTH_SHORT).show()
@@ -96,10 +110,10 @@ class SignUpActivity : AppCompatActivity() {
                         .addOnFailureListener {
                             Toast.makeText(this, "Failed to save user data: ${it.message}", Toast.LENGTH_LONG).show()
                         }
-
                 } else {
-                    Toast.makeText(this, "Sign Up failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Sign Up failed: ${task.exception?.message}", Toast.LENGTH_LONG).show()
                 }
             }
     }
 }
+

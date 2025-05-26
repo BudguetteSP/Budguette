@@ -12,7 +12,20 @@
           "package_name": "com.example.budguette"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "134349038453-ge9m6oss1r0gkfe9j5kkhf59qtgda7iq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.budguette",
+            "certificate_hash": "fd7b090a7a4454cba74de78be88eac376970e004"
+          }
+        },
+        {
+          "client_id": "134349038453-pd275ehgnjmsfdfv4o00fo6obmi8qfg4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCrY5t945PzuCEYX9LgSjU_ubsPqhXxZQE"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "134349038453-pd275ehgnjmsfdfv4o00fo6obmi8qfg4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

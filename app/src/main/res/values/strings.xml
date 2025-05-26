@@ -8,6 +8,12 @@
     <string name="enter_your_bio">Enter your bio</string>
     <string name="save_bio">Save Bio</string>
     <string name="log_out">Log Out</string>
+    <string name="facebook_app_id">1093708699445666</string>
+    <string name="facebook_client_token">198cb00fc523b82b384413a95317ab1e</string>
+    <string name="fb_login_protocol_scheme">fb1093708699445666</string>
+    <string name="default_web_client_id">134349038453-pd275ehgnjmsfdfv4o00fo6obmi8qfg4.apps.googleusercontent.com</string>
+
+
 
     <string-array name="subscription_frequencies">
         <item>Monthly</item>

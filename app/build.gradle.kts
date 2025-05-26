@@ -29,14 +29,22 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
+
     kotlinOptions {
         jvmTarget = "1.8"
     }
+
+    // ✅ ENABLE VIEW BINDING
+    buildFeatures {
+        viewBinding = true
+    }
 }
+
 
 dependencies {
 
@@ -61,6 +69,10 @@ dependencies {
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
     implementation("com.google.android.material:material:1.11.0")
     implementation("com.github.PhilJay:MPAndroidChart:3.1.0")
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.android.gms:play-services-auth:21.0.0")
+    implementation("com.facebook.android:facebook-login:latest.release")
+
 
 
 
