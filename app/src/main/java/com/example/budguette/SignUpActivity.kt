@@ -38,33 +38,10 @@ class SignUpActivity : AppCompatActivity() {
 
         // Facebook setup
         callbackManager = CallbackManager.Factory.create()
-
-        // Register Facebook callback FIRST
         LoginManager.getInstance().registerCallback(callbackManager,
             object : FacebookCallback<LoginResult> {
                 override fun onSuccess(result: LoginResult) {
                     handleFacebookAccessToken(result.accessToken)
-
-                    val request = GraphRequest.newMeRequest(result.accessToken) { obj, _ ->
-                        try {
-                            val name = obj?.getString("name")
-                            val email = obj?.optString("email")
-                            val birthday = obj?.optString("birthday")
-                            val profileUrl = "https://graph.facebook.com/${result.accessToken.userId}/picture?type=large"
-                            val uid = auth.currentUser?.uid
-                            if (uid != null) {
-                                saveUserToFirestore(name, email, uid, profileUrl, birthday)
-                                startActivity(Intent(this@SignUpActivity, MainActivity::class.java))
-                                finish()
-                            }
-                        } catch (e: JSONException) {
-                            Log.e(TAG, "JSON parsing error", e)
-                        }
-                    }
-                    val parameters = Bundle()
-                    parameters.putString("fields", "id,name,email,birthday")
-                    request.parameters = parameters
-                    request.executeAsync()
                 }
 
                 override fun onCancel() {
@@ -119,8 +96,6 @@ class SignUpActivity : AppCompatActivity() {
                 }
         }
 
-
-
         googleLoginButton.setOnClickListener {
             startActivityForResult(googleSignInClient.signInIntent, 9001)
         }
@@ -152,11 +127,45 @@ class SignUpActivity : AppCompatActivity() {
         val credential = FacebookAuthProvider.getCredential(token.token)
         auth.signInWithCredential(credential)
             .addOnCompleteListener(this) { task ->
-                if (!task.isSuccessful) {
+                if (task.isSuccessful) {
+                    val firebaseUser = auth.currentUser
+                    val uid = firebaseUser?.uid
+
+                    // Fetch additional profile data using GraphRequest
+                    val request = GraphRequest.newMeRequest(token) { obj, _ ->
+                        try {
+                            val name = obj?.getString("name")
+                            val fbEmail = obj?.optString("email") // May be null if not granted
+                            val birthday = obj?.optString("birthday")
+                            val profileUrl = "https://graph.facebook.com/${token.userId}/picture?type=large"
+
+                            // Fallback to Firebase's email if Facebook email is null
+                            val email = fbEmail ?: firebaseUser?.email
+
+                            Log.d("FacebookData", "name=$name, email=$email, birthday=$birthday")
+
+                            if (uid != null) {
+                                saveUserToFirestore(name, email, uid, profileUrl, birthday)
+                                startActivity(Intent(this@SignUpActivity, MainActivity::class.java))
+                                finish()
+                            }
+
+                        } catch (e: JSONException) {
+                            Log.e(TAG, "JSON parsing error", e)
+                        }
+                    }
+
+                    val parameters = Bundle()
+                    parameters.putString("fields", "id,name,email,birthday")
+                    request.parameters = parameters
+                    request.executeAsync()
+
+                } else {
                     Toast.makeText(this, "Authentication failed: ${task.exception?.message}", Toast.LENGTH_LONG).show()
                 }
             }
     }
+
 
     private fun firebaseAuthWithGoogle(account: GoogleSignInAccount) {
         val credential = GoogleAuthProvider.getCredential(account.idToken, null)
@@ -197,6 +206,7 @@ class SignUpActivity : AppCompatActivity() {
             }
     }
 }
+
 
 
 

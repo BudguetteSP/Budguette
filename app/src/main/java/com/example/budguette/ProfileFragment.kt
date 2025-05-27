@@ -1,6 +1,7 @@
 package com.example.budguette
 
 import android.Manifest
+import android.app.DatePickerDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -16,6 +17,7 @@ import com.bumptech.glide.Glide
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
+import java.util.*
 
 class ProfileFragment : Fragment() {
 
@@ -23,10 +25,10 @@ class ProfileFragment : Fragment() {
     private lateinit var nameText: TextView
     private lateinit var emailText: TextView
     private lateinit var dobText: TextView
-    private lateinit var bioEditText: EditText
-    private lateinit var saveBioBtn: Button
+    private lateinit var bioText: TextView
     private lateinit var changePictureBtn: Button
     private lateinit var logoutBtn: Button
+    private lateinit var editProfileBtn: Button
 
     private val auth = FirebaseAuth.getInstance()
     private val db = FirebaseFirestore.getInstance()
@@ -45,17 +47,17 @@ class ProfileFragment : Fragment() {
         nameText = view.findViewById(R.id.profile_name)
         emailText = view.findViewById(R.id.profile_email)
         dobText = view.findViewById(R.id.profile_dob)
-        bioEditText = view.findViewById(R.id.profile_bio)
-        saveBioBtn = view.findViewById(R.id.save_bio_btn)
+        bioText = view.findViewById(R.id.profile_bio)
         changePictureBtn = view.findViewById(R.id.change_picture_btn)
         logoutBtn = view.findViewById(R.id.logout_button)
+        editProfileBtn = view.findViewById(R.id.edit_profile_btn)
 
         checkAndRequestPermissions()
         loadUserInfo()
 
-        saveBioBtn.setOnClickListener { saveBio() }
         changePictureBtn.setOnClickListener { pickImage.launch("image/*") }
         logoutBtn.setOnClickListener { showLogoutConfirmation() }
+        editProfileBtn.setOnClickListener { showEditProfileDialog() }
 
         return view
     }
@@ -75,26 +77,13 @@ class ProfileFragment : Fragment() {
                     nameText.text = document.getString("name") ?: "N/A"
                     emailText.text = document.getString("email") ?: auth.currentUser?.email
                     dobText.text = document.getString("dob") ?: "N/A"
-                    bioEditText.setText(document.getString("bio") ?: "")
+                    bioText.text = document.getString("bio") ?: ""
+
                     loadProfileImage(document.getString("profileImageUrl"))
                 }
             }
             .addOnFailureListener {
                 Toast.makeText(context, "Failed to load user info", Toast.LENGTH_SHORT).show()
-            }
-    }
-
-    private fun saveBio() {
-        val userId = auth.currentUser?.uid ?: return
-        val bio = bioEditText.text.toString()
-
-        db.collection("users").document(userId)
-            .update("bio", bio)
-            .addOnSuccessListener {
-                Toast.makeText(context, "Bio updated!", Toast.LENGTH_SHORT).show()
-            }
-            .addOnFailureListener {
-                Toast.makeText(context, "Failed to update bio", Toast.LENGTH_SHORT).show()
             }
     }
 
@@ -109,7 +98,6 @@ class ProfileFragment : Fragment() {
         val userId = auth.currentUser?.uid ?: return
         val storageRef = storage.reference.child("profile_pictures/${userId}.jpg")
 
-        Log.d("ProfileFragment", "Uploading image: $imageUri")
         storageRef.putFile(imageUri)
             .addOnSuccessListener {
                 storageRef.downloadUrl.addOnSuccessListener { uri ->
@@ -117,7 +105,6 @@ class ProfileFragment : Fragment() {
                 }
             }
             .addOnFailureListener {
-                Log.e("ProfileFragment", "Image upload failed", it)
                 Toast.makeText(context, "Image upload failed", Toast.LENGTH_SHORT).show()
             }
     }
@@ -135,6 +122,73 @@ class ProfileFragment : Fragment() {
             }
     }
 
+    private fun showEditProfileDialog() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_edit_profile, null)
+        val dialog = android.app.AlertDialog.Builder(requireContext())
+            .setTitle("Edit Profile")
+            .setView(dialogView)
+            .setNegativeButton("Cancel", null)
+            .create()
+
+        val nameField = dialogView.findViewById<EditText>(R.id.edit_name)
+        val dobField = dialogView.findViewById<EditText>(R.id.edit_dob)
+        val bioField = dialogView.findViewById<EditText>(R.id.edit_bio)
+
+        nameField.setText(nameText.text.toString())
+        dobField.setText(dobText.text.toString())
+        bioField.setText(bioText.text.toString())
+
+        dobField.setOnClickListener {
+            val calendar = Calendar.getInstance()
+            val datePicker = DatePickerDialog(requireContext(),
+                { _, year, month, day -> dobField.setText("${month + 1}/$day/$year") },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+            )
+            datePicker.show()
+        }
+
+        dialog.setButton(android.app.AlertDialog.BUTTON_POSITIVE, "Save") { _, _ -> }
+
+        dialog.setOnShowListener {
+            val saveButton = dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE)
+            saveButton.setOnClickListener {
+                val newName = nameField.text.toString().trim()
+                val newDob = dobField.text.toString().trim()
+                val newBio = bioField.text.toString().trim()
+
+                if (newName.isEmpty() || newDob.isEmpty()) {
+                    Toast.makeText(context, "Name and DOB are required", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+
+                updateProfile(newName, newDob, newBio)
+                dialog.dismiss()
+            }
+        }
+
+        dialog.show()
+    }
+
+    private fun updateProfile(name: String, dob: String, bio: String) {
+        val userId = auth.currentUser?.uid ?: return
+
+        db.collection("users").document(userId)
+            .update(mapOf(
+                "name" to name,
+                "dob" to dob,
+                "bio" to bio
+            ))
+            .addOnSuccessListener {
+                Toast.makeText(context, "Profile updated", Toast.LENGTH_SHORT).show()
+                loadUserInfo()
+            }
+            .addOnFailureListener {
+                Toast.makeText(context, "Failed to update profile", Toast.LENGTH_SHORT).show()
+            }
+    }
+
     private fun showLogoutConfirmation() {
         val builder = android.app.AlertDialog.Builder(requireContext())
         builder.setTitle("Confirm Logout")
@@ -149,6 +203,8 @@ class ProfileFragment : Fragment() {
         builder.show()
     }
 }
+
+
 
 
 
