@@ -12,7 +12,6 @@ import com.facebook.login.LoginResult
 import com.google.android.gms.auth.api.signin.*
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.*
-import org.json.JSONException
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLoginBinding
@@ -35,9 +34,25 @@ class LoginActivity : AppCompatActivity() {
         googleSignInClient = GoogleSignIn.getClient(this, gso)
 
         // Facebook Sign-In setup
-        FacebookSdk.sdkInitialize(applicationContext)
         callbackManager = CallbackManager.Factory.create()
 
+        // ✅ Register callback ONCE during onCreate
+        LoginManager.getInstance().registerCallback(callbackManager,
+            object : FacebookCallback<LoginResult> {
+                override fun onSuccess(result: LoginResult) {
+                    handleFacebookAccessToken(result.accessToken)
+                }
+
+                override fun onCancel() {
+                    Toast.makeText(this@LoginActivity, "Facebook sign in canceled.", Toast.LENGTH_SHORT).show()
+                }
+
+                override fun onError(error: FacebookException) {
+                    Toast.makeText(this@LoginActivity, "Facebook sign in failed: ${error.message}", Toast.LENGTH_SHORT).show()
+                }
+            })
+
+        // Email/password login
         binding.loginButton.setOnClickListener {
             val email = binding.emailEditText.text.toString()
             val password = binding.passwordEditText.text.toString()
@@ -51,29 +66,18 @@ class LoginActivity : AppCompatActivity() {
                 }
         }
 
+        // Google login
         binding.googleSignInButton.setOnClickListener {
             val signInIntent = googleSignInClient.signInIntent
             startActivityForResult(signInIntent, 1001)
         }
 
+        // ✅ Facebook login
         binding.facebookSignInButton.setOnClickListener {
             LoginManager.getInstance().logInWithReadPermissions(this, listOf("email", "public_profile"))
-            LoginManager.getInstance().registerCallback(callbackManager,
-                object : FacebookCallback<LoginResult> {
-                    override fun onSuccess(result: LoginResult) {
-                        handleFacebookAccessToken(result.accessToken)
-                    }
-
-                    override fun onCancel() {
-                        Toast.makeText(this@LoginActivity, "Facebook sign in canceled.", Toast.LENGTH_SHORT).show()
-                    }
-
-                    override fun onError(error: FacebookException) {
-                        Toast.makeText(this@LoginActivity, "Facebook sign in failed: ${error.message}", Toast.LENGTH_SHORT).show()
-                    }
-                })
         }
 
+        // Sign-up link
         binding.signUpLink.setOnClickListener {
             startActivity(Intent(this, SignUpActivity::class.java))
         }
@@ -85,6 +89,7 @@ class LoginActivity : AppCompatActivity() {
         // Facebook callback
         callbackManager.onActivityResult(requestCode, resultCode, data)
 
+        // Google Sign-In result
         if (requestCode == 1001) {
             val task = GoogleSignIn.getSignedInAccountFromIntent(data)
             try {
@@ -104,7 +109,8 @@ class LoginActivity : AppCompatActivity() {
                     startActivity(Intent(this, MainActivity::class.java))
                     finish()
                 } else {
-                    Toast.makeText(this, "Google authentication failed.", Toast.LENGTH_SHORT).show()
+                    Log.e("FACEBOOK_AUTH", "Failure", task.exception)
+                    Toast.makeText(this, "Facebook authentication failed.", Toast.LENGTH_SHORT).show()
                 }
             }
     }
