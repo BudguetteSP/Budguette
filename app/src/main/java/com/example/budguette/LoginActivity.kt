@@ -12,6 +12,7 @@ import com.facebook.login.LoginResult
 import com.google.android.gms.auth.api.signin.*
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.*
+import com.google.firebase.firestore.FirebaseFirestore
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLoginBinding
@@ -36,7 +37,6 @@ class LoginActivity : AppCompatActivity() {
         // Facebook Sign-In setup
         callbackManager = CallbackManager.Factory.create()
 
-        // ✅ Register callback ONCE during onCreate
         LoginManager.getInstance().registerCallback(callbackManager,
             object : FacebookCallback<LoginResult> {
                 override fun onSuccess(result: LoginResult) {
@@ -66,13 +66,17 @@ class LoginActivity : AppCompatActivity() {
                 }
         }
 
+        binding.forgotPasswordButton.setOnClickListener {
+            startActivity(Intent(this, ForgotPasswordActivity::class.java))
+        }
+
         // Google login
         binding.googleSignInButton.setOnClickListener {
             val signInIntent = googleSignInClient.signInIntent
             startActivityForResult(signInIntent, 1001)
         }
 
-        // ✅ Facebook login
+        // Facebook login
         binding.facebookSignInButton.setOnClickListener {
             LoginManager.getInstance().logInWithReadPermissions(this, listOf("email", "public_profile", "user_birthday"))
         }
@@ -106,11 +110,43 @@ class LoginActivity : AppCompatActivity() {
         auth.signInWithCredential(credential)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
-                    startActivity(Intent(this, MainActivity::class.java))
-                    finish()
+                    val user = auth.currentUser
+                    val uid = user?.uid
+                    val name = user?.displayName
+                    val email = user?.email
+                    val profileUrl = user?.photoUrl?.toString()
+
+                    if (uid != null && email != null) {
+                        val db = FirebaseFirestore.getInstance()
+                        val userRef = db.collection("users").document(uid)
+
+                        userRef.get().addOnSuccessListener { document ->
+                            if (!document.exists()) {
+                                val userMap = hashMapOf(
+                                    "uid" to uid,
+                                    "name" to name,
+                                    "email" to email,
+                                    "profileUrl" to profileUrl,
+                                    "dob" to null
+                                )
+                                userRef.set(userMap)
+                                    .addOnSuccessListener {
+                                        Log.d("LOGIN", "New user added to Firestore")
+                                    }
+                                    .addOnFailureListener {
+                                        Log.e("LOGIN", "Failed to save user", it)
+                                    }
+                            } else {
+                                Log.d("LOGIN", "User already exists in Firestore")
+                            }
+
+                            startActivity(Intent(this, MainActivity::class.java))
+                            finish()
+                        }
+                    }
                 } else {
-                    Log.e("FACEBOOK_AUTH", "Failure", task.exception)
-                    Toast.makeText(this, "Facebook authentication failed.", Toast.LENGTH_SHORT).show()
+                    Log.e("GOOGLE_AUTH", "Failure", task.exception)
+                    Toast.makeText(this, "Google authentication failed.", Toast.LENGTH_SHORT).show()
                 }
             }
     }
@@ -120,21 +156,43 @@ class LoginActivity : AppCompatActivity() {
         auth.signInWithCredential(credential)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
-                    // Fetch user data from Facebook Graph API
-                    val request = GraphRequest.newMeRequest(token) { obj, response ->
+                    val user = auth.currentUser
+                    val uid = user?.uid
+                    val profileUrl = user?.photoUrl?.toString()
+
+                    val request = GraphRequest.newMeRequest(token) { obj, _ ->
                         try {
                             val email = obj?.getString("email")
                             val name = obj?.getString("name")
-                            val birthday = obj?.optString("birthday") // format: MM/DD/YYYY
+                            val birthday = obj?.optString("birthday")
 
-                            Log.d("FACEBOOK_DATA", "Email: $email")
-                            Log.d("FACEBOOK_DATA", "Name: $name")
-                            Log.d("FACEBOOK_DATA", "Birthday: $birthday")
+                            if (uid != null && email != null) {
+                                val db = FirebaseFirestore.getInstance()
+                                val userRef = db.collection("users").document(uid)
 
-                            // You can save this info to Firestore here if needed
-
+                                userRef.get().addOnSuccessListener { document ->
+                                    if (!document.exists()) {
+                                        val userMap = hashMapOf(
+                                            "uid" to uid,
+                                            "name" to name,
+                                            "email" to email,
+                                            "profileUrl" to profileUrl,
+                                            "dob" to birthday
+                                        )
+                                        userRef.set(userMap)
+                                            .addOnSuccessListener {
+                                                Log.d("FACEBOOK", "User added to Firestore")
+                                            }
+                                            .addOnFailureListener {
+                                                Log.e("FACEBOOK", "Failed to save user", it)
+                                            }
+                                    }
+                                    startActivity(Intent(this, MainActivity::class.java))
+                                    finish()
+                                }
+                            }
                         } catch (e: Exception) {
-                            Log.e("FACEBOOK_GRAPH_ERROR", "Error parsing Facebook data", e)
+                            Log.e("FACEBOOK_GRAPH", "Error parsing Facebook data", e)
                         }
                     }
 
@@ -142,16 +200,12 @@ class LoginActivity : AppCompatActivity() {
                     parameters.putString("fields", "id,name,email,birthday")
                     request.parameters = parameters
                     request.executeAsync()
-
-                    // Continue to main screen
-                    startActivity(Intent(this, MainActivity::class.java))
-                    finish()
                 } else {
                     Toast.makeText(this, "Facebook authentication failed.", Toast.LENGTH_SHORT).show()
                 }
             }
     }
-
 }
+
 
 

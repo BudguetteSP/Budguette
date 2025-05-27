@@ -27,38 +27,73 @@ class SignUpActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_sign_up)
 
-        // Initialize Firebase Auth
         auth = FirebaseAuth.getInstance()
 
-        // Set up Google Sign-In
+        // Google Sign-In setup
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(getString(R.string.default_web_client_id))
             .requestEmail()
             .build()
         googleSignInClient = GoogleSignIn.getClient(this, gso)
 
-        // Set up Facebook Callback Manager
+        // Facebook setup
         callbackManager = CallbackManager.Factory.create()
 
-        // Initialize UI Elements
+        // Register Facebook callback FIRST
+        LoginManager.getInstance().registerCallback(callbackManager,
+            object : FacebookCallback<LoginResult> {
+                override fun onSuccess(result: LoginResult) {
+                    handleFacebookAccessToken(result.accessToken)
+
+                    val request = GraphRequest.newMeRequest(result.accessToken) { obj, _ ->
+                        try {
+                            val name = obj?.getString("name")
+                            val email = obj?.optString("email")
+                            val birthday = obj?.optString("birthday")
+                            val profileUrl = "https://graph.facebook.com/${result.accessToken.userId}/picture?type=large"
+                            val uid = auth.currentUser?.uid
+                            if (uid != null) {
+                                saveUserToFirestore(name, email, uid, profileUrl, birthday)
+                                startActivity(Intent(this@SignUpActivity, MainActivity::class.java))
+                                finish()
+                            }
+                        } catch (e: JSONException) {
+                            Log.e(TAG, "JSON parsing error", e)
+                        }
+                    }
+                    val parameters = Bundle()
+                    parameters.putString("fields", "id,name,email,birthday")
+                    request.parameters = parameters
+                    request.executeAsync()
+                }
+
+                override fun onCancel() {
+                    Toast.makeText(this@SignUpActivity, "Facebook sign in canceled.", Toast.LENGTH_SHORT).show()
+                }
+
+                override fun onError(error: FacebookException) {
+                    Toast.makeText(this@SignUpActivity, "Facebook sign in failed: ${error.message}", Toast.LENGTH_LONG).show()
+                }
+            })
+
+        // UI setup
         val dobEditText: EditText = findViewById(R.id.dob_edit_text)
         val signUpButton: Button = findViewById(R.id.sign_up_button)
         val googleLoginButton: Button = findViewById(R.id.google_login_button)
         val facebookLoginButton: Button = findViewById(R.id.facebook_login_button)
 
-        // Date picker for DOB field
         dobEditText.setOnClickListener {
             val calendar = Calendar.getInstance()
-            val year = calendar.get(Calendar.YEAR)
-            val month = calendar.get(Calendar.MONTH)
-            val day = calendar.get(Calendar.DAY_OF_MONTH)
-            val datePickerDialog = DatePickerDialog(this, { _, y, m, d ->
-                dobEditText.setText("${m + 1}/$d/$y")
-            }, year, month, day)
+            val datePickerDialog = DatePickerDialog(
+                this,
+                { _, y, m, d -> dobEditText.setText("${m + 1}/$d/$y") },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+            )
             datePickerDialog.show()
         }
 
-        // Manual sign-up (not using social logins)
         signUpButton.setOnClickListener {
             val name = findViewById<EditText>(R.id.full_name_edit_text).text.toString()
             val email = findViewById<EditText>(R.id.email_edit_text).text.toString()
@@ -84,53 +119,32 @@ class SignUpActivity : AppCompatActivity() {
                 }
         }
 
-        // Google Sign-In
+
+
         googleLoginButton.setOnClickListener {
-            val signInIntent = googleSignInClient.signInIntent
-            startActivityForResult(signInIntent, 9001)
+            startActivityForResult(googleSignInClient.signInIntent, 9001)
         }
 
-        // Facebook Sign-In
         facebookLoginButton.setOnClickListener {
             LoginManager.getInstance().logInWithReadPermissions(
                 this,
                 listOf("email", "public_profile", "user_birthday")
             )
-            LoginManager.getInstance().registerCallback(callbackManager,
-                object : FacebookCallback<LoginResult> {
-                    override fun onSuccess(result: LoginResult) {
-                        handleFacebookAccessToken(result.accessToken)
+        }
+    }
 
-                        val request = GraphRequest.newMeRequest(result.accessToken) { obj, _ ->
-                            try {
-                                obj?.let {
-                                    val name = it.getString("name")
-                                    val email = it.optString("email")
-                                    val birthday = it.optString("birthday")
-                                    val profileUrl = "https://graph.facebook.com/${result.accessToken.userId}/picture?type=large"
-                                    val uid = auth.currentUser?.uid
-                                    if (uid != null) {
-                                        saveUserToFirestore(name, email, uid, profileUrl, birthday)
-                                    }
-                                }
-                            } catch (e: JSONException) {
-                                e.printStackTrace()
-                            }
-                        }
-                        val parameters = Bundle()
-                        parameters.putString("fields", "id,name,email,birthday")
-                        request.parameters = parameters
-                        request.executeAsync()
-                    }
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        callbackManager.onActivityResult(requestCode, resultCode, data)
 
-                    override fun onCancel() {
-                        Toast.makeText(this@SignUpActivity, "Facebook sign in canceled.", Toast.LENGTH_SHORT).show()
-                    }
-
-                    override fun onError(error: FacebookException) {
-                        Toast.makeText(this@SignUpActivity, "Facebook sign in failed: ${error.message}", Toast.LENGTH_LONG).show()
-                    }
-                })
+        if (requestCode == 9001) {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(data)
+            try {
+                val account = task.getResult(ApiException::class.java)
+                firebaseAuthWithGoogle(account)
+            } catch (e: ApiException) {
+                Toast.makeText(this, "Google sign in failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -159,53 +173,30 @@ class SignUpActivity : AppCompatActivity() {
                     startActivity(Intent(this, MainActivity::class.java))
                     finish()
                 } else {
-                    Toast.makeText(this, "Google sign-in failed: ${task.exception?.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, "Google authentication failed", Toast.LENGTH_LONG).show()
                 }
             }
     }
 
-    private fun saveUserToFirestore(name: String?, email: String?, uid: String?, profileUrl: String?, dobFromProvider: String? = null) {
-        val dob = dobFromProvider ?: findViewById<EditText>(R.id.dob_edit_text).text.toString()
+    private fun saveUserToFirestore(name: String?, email: String?, uid: String?, profileUrl: String?, dob: String?) {
+        if (uid == null) return
         val db = FirebaseFirestore.getInstance()
-
         val userMap = hashMapOf(
+            "uid" to uid,
             "name" to name,
             "email" to email,
-            "dob" to dob,
-            "profileUrl" to profileUrl
+            "profileUrl" to profileUrl,
+            "dob" to dob
         )
-
-        uid?.let {
-            db.collection("users").document(it)
-                .set(userMap)
-                .addOnSuccessListener {
-                    Log.d(TAG, "User added to Firestore")
-                }
-                .addOnFailureListener { e ->
-                    Log.w(TAG, "Error adding user to Firestore", e)
-                }
-        }
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        // Facebook
-        callbackManager.onActivityResult(requestCode, resultCode, data)
-
-        // Google
-        if (requestCode == 9001) {
-            val task = GoogleSignIn.getSignedInAccountFromIntent(data)
-            try {
-                val account = task.getResult(ApiException::class.java)
-                if (account != null) {
-                    firebaseAuthWithGoogle(account)
-                }
-            } catch (e: ApiException) {
-                Log.w(TAG, "Google sign in failed", e)
+        db.collection("users").document(uid).set(userMap)
+            .addOnSuccessListener {
+                Log.d(TAG, "User added to Firestore")
             }
-        }
+            .addOnFailureListener {
+                Log.e(TAG, "Failed to save user", it)
+            }
     }
 }
+
 
 
