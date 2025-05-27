@@ -74,7 +74,7 @@ class LoginActivity : AppCompatActivity() {
 
         // ✅ Facebook login
         binding.facebookSignInButton.setOnClickListener {
-            LoginManager.getInstance().logInWithReadPermissions(this, listOf("email", "public_profile"))
+            LoginManager.getInstance().logInWithReadPermissions(this, listOf("email", "public_profile", "user_birthday"))
         }
 
         // Sign-up link
@@ -120,6 +120,30 @@ class LoginActivity : AppCompatActivity() {
         auth.signInWithCredential(credential)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
+                    // Fetch user data from Facebook Graph API
+                    val request = GraphRequest.newMeRequest(token) { obj, response ->
+                        try {
+                            val email = obj?.getString("email")
+                            val name = obj?.getString("name")
+                            val birthday = obj?.optString("birthday") // format: MM/DD/YYYY
+
+                            Log.d("FACEBOOK_DATA", "Email: $email")
+                            Log.d("FACEBOOK_DATA", "Name: $name")
+                            Log.d("FACEBOOK_DATA", "Birthday: $birthday")
+
+                            // You can save this info to Firestore here if needed
+
+                        } catch (e: Exception) {
+                            Log.e("FACEBOOK_GRAPH_ERROR", "Error parsing Facebook data", e)
+                        }
+                    }
+
+                    val parameters = Bundle()
+                    parameters.putString("fields", "id,name,email,birthday")
+                    request.parameters = parameters
+                    request.executeAsync()
+
+                    // Continue to main screen
                     startActivity(Intent(this, MainActivity::class.java))
                     finish()
                 } else {
@@ -127,6 +151,7 @@ class LoginActivity : AppCompatActivity() {
                 }
             }
     }
+
 }
 
 
