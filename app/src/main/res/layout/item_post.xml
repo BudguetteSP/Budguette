@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:padding="12dp"
-    android:background="#FFFFFF">
+    android:background="#0B1C3A">
 
     <ImageView
         android:id="@+id/profile_image"
@@ -25,7 +25,7 @@
             android:text="User Name"
             android:textStyle="bold"
             android:textSize="16sp"
-            android:textColor="#000000"
+            android:textColor="#FFFFFF"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
@@ -42,7 +42,7 @@
             android:id="@+id/post_caption"
             android:text="Post Caption"
             android:textSize="14sp"
-            android:textColor="#444444"
+            android:textColor="#FFFFFF"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
     </LinearLayout>
