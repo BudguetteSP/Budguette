@@ -14,12 +14,18 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
+import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import java.util.*
 
 class ProfileFragment : Fragment() {
+
+    private lateinit var postsRecyclerView: RecyclerView
+    private lateinit var postAdapter: PostAdapter
+    private val postsList = mutableListOf<Post>()
 
     private lateinit var profileImage: ImageView
     private lateinit var nameText: TextView
@@ -58,6 +64,14 @@ class ProfileFragment : Fragment() {
         changePictureBtn.setOnClickListener { pickImage.launch("image/*") }
         logoutBtn.setOnClickListener { showLogoutConfirmation() }
         editProfileBtn.setOnClickListener { showEditProfileDialog() }
+        // Initialize RecyclerView for user posts
+        postsRecyclerView = view.findViewById(R.id.user_posts_recycler)
+        postAdapter = PostAdapter()
+        postsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        postsRecyclerView.adapter = postAdapter
+
+        loadUserPosts()
+
 
         return view
     }
@@ -87,12 +101,40 @@ class ProfileFragment : Fragment() {
             }
     }
 
+    private fun loadUserPosts() {
+        val userId = auth.currentUser?.uid ?: return
+
+        db.collection("posts")
+            .whereEqualTo("userId", userId)
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                val posts = querySnapshot.documents.map { doc ->
+                    Post(
+                        userId = doc.getString("userId") ?: "",
+                        userName = doc.getString("userName") ?: "",
+                        profileImageUrl = doc.getString("profileImageUrl") ?: "",
+                        title = doc.getString("title") ?: "",
+                        caption = doc.getString("caption") ?: "",
+                        timestamp = doc.getLong("timestamp") ?: System.currentTimeMillis(),
+                        id = doc.id
+                    )
+                }
+                postAdapter.submitList(posts)
+            }
+            .addOnFailureListener {
+                Toast.makeText(context, "Failed to load your posts", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+
     private fun loadProfileImage(url: String?) {
-        Glide.with(this)
+        if (!isAdded) return
+        Glide.with(requireContext())
             .load(url)
             .placeholder(R.drawable.ic_defaultprofile_background)
             .into(profileImage)
     }
+
 
     private fun uploadImageToFirebaseStorage(imageUri: Uri) {
         val userId = auth.currentUser?.uid ?: return
