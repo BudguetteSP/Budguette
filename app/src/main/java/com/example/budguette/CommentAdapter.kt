@@ -13,6 +13,7 @@ class CommentAdapter(private val comments: List<Comment>) :
     RecyclerView.Adapter<CommentAdapter.CommentViewHolder>() {
 
     var onCommentLongClicked: ((Comment) -> Unit)? = null
+    var onProfileClicked: ((String) -> Unit)? = null // New: Handle profile clicks
 
     inner class CommentViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val profileImage: ImageView = view.findViewById(R.id.comment_user_image)
@@ -47,8 +48,16 @@ class CommentAdapter(private val comments: List<Comment>) :
                 true
             }
         }
-    }
 
+        // New: Set click listeners for profile image and name
+        holder.profileImage.setOnClickListener {
+            onProfileClicked?.invoke(comment.userId)
+        }
+
+        holder.userName.setOnClickListener {
+            onProfileClicked?.invoke(comment.userId)
+        }
+    }
 
     override fun getItemCount() = comments.size
 }

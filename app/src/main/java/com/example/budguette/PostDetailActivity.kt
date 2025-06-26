@@ -130,6 +130,11 @@ class PostDetailActivity : AppCompatActivity() {
     private fun setupCommentsRecyclerView() {
         commentsAdapter = CommentAdapter(commentsList)
 
+        commentsAdapter.onProfileClicked = { userId ->
+            openUserProfile(userId)
+        }
+
+
         commentsAdapter.onCommentLongClicked = { comment ->
             showDeleteCommentDialog(comment)
         }
