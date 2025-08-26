@@ -13,7 +13,7 @@ import com.google.android.gms.auth.api.signin.*
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.*
 import com.google.firebase.firestore.FirebaseFirestore
-import org.json.JSONException
+import com.google.firebase.firestore.SetOptions
 import java.util.*
 
 class SignUpActivity : AppCompatActivity() {
@@ -29,14 +29,14 @@ class SignUpActivity : AppCompatActivity() {
 
         auth = FirebaseAuth.getInstance()
 
-        // Google Sign-In setup
+        // ✅ Google Sign-In
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(getString(R.string.default_web_client_id))
             .requestEmail()
             .build()
         googleSignInClient = GoogleSignIn.getClient(this, gso)
 
-        // Facebook setup
+        // ✅ Facebook setup
         callbackManager = CallbackManager.Factory.create()
         LoginManager.getInstance().registerCallback(callbackManager,
             object : FacebookCallback<LoginResult> {
@@ -53,7 +53,7 @@ class SignUpActivity : AppCompatActivity() {
                 }
             })
 
-        // UI setup
+        // ✅ UI setup
         val dobEditText: EditText = findViewById(R.id.dob_edit_text)
         val signUpButton: Button = findViewById(R.id.sign_up_button)
         val googleLoginButton: Button = findViewById(R.id.google_login_button)
@@ -71,6 +71,7 @@ class SignUpActivity : AppCompatActivity() {
             datePickerDialog.show()
         }
 
+        // ✅ Email Sign Up
         signUpButton.setOnClickListener {
             val name = findViewById<EditText>(R.id.full_name_edit_text).text.toString()
             val email = findViewById<EditText>(R.id.email_edit_text).text.toString()
@@ -86,25 +87,35 @@ class SignUpActivity : AppCompatActivity() {
             auth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this) { task ->
                     if (task.isSuccessful) {
-                        val uid = auth.currentUser?.uid
-                        saveUserToFirestore(name, email, uid, null, dob)
-                        startActivity(Intent(this, MainActivity::class.java))
-                        finish()
+                        val uid = auth.currentUser?.uid ?: return@addOnCompleteListener
+                        val userData = hashMapOf(
+                            "uid" to uid,
+                            "name" to name,
+                            "email" to email,
+                            "dob" to dob
+                        )
+                        FirebaseFirestore.getInstance()
+                            .collection("users")
+                            .document(uid)
+                            .set(userData, SetOptions.merge())
+                            .addOnSuccessListener {
+                                startActivity(Intent(this, MainActivity::class.java))
+                                finish()
+                            }
                     } else {
                         Toast.makeText(this, "Sign Up Failed: ${task.exception?.message}", Toast.LENGTH_LONG).show()
                     }
                 }
         }
 
+        // ✅ Google Login
         googleLoginButton.setOnClickListener {
             startActivityForResult(googleSignInClient.signInIntent, 9001)
         }
 
+        // ✅ Facebook Login
         facebookLoginButton.setOnClickListener {
-            LoginManager.getInstance().logInWithReadPermissions(
-                this,
-                listOf("email", "public_profile", "user_birthday")
-            )
+            LoginManager.getInstance().logInWithReadPermissions(this, listOf("email", "public_profile"))
         }
     }
 
@@ -123,90 +134,54 @@ class SignUpActivity : AppCompatActivity() {
         }
     }
 
+    // ✅ Facebook Login Handler
     private fun handleFacebookAccessToken(token: AccessToken) {
         val credential = FacebookAuthProvider.getCredential(token.token)
         auth.signInWithCredential(credential)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
-                    val firebaseUser = auth.currentUser
-                    val uid = firebaseUser?.uid
-
-                    // Fetch additional profile data using GraphRequest
-                    val request = GraphRequest.newMeRequest(token) { obj, _ ->
-                        try {
-                            val name = obj?.getString("name")
-                            val fbEmail = obj?.optString("email") // May be null if not granted
-                            val birthday = obj?.optString("birthday")
-                            val profileUrl = "https://graph.facebook.com/${token.userId}/picture?type=large"
-
-                            // Fallback to Firebase's email if Facebook email is null
-                            val email = fbEmail ?: firebaseUser?.email
-
-                            Log.d("FacebookData", "name=$name, email=$email, birthday=$birthday")
-
-                            if (uid != null) {
-                                saveUserToFirestore(name, email, uid, profileUrl, birthday)
-                                startActivity(Intent(this@SignUpActivity, MainActivity::class.java))
-                                finish()
-                            }
-
-                        } catch (e: JSONException) {
-                            Log.e(TAG, "JSON parsing error", e)
+                    val user = auth.currentUser ?: return@addOnCompleteListener
+                    val userRef = FirebaseFirestore.getInstance().collection("users").document(user.uid)
+                    val updateData = hashMapOf(
+                        "name" to (user.displayName ?: ""),
+                        "email" to (user.email ?: ""),
+                        "profileImage" to (user.photoUrl?.toString() ?: "")
+                    )
+                    userRef.set(updateData, SetOptions.merge())
+                        .addOnSuccessListener {
+                            goToMainActivity()
                         }
-                    }
-
-                    val parameters = Bundle()
-                    parameters.putString("fields", "id,name,email,birthday")
-                    request.parameters = parameters
-                    request.executeAsync()
-
                 } else {
-                    Toast.makeText(this, "Authentication failed: ${task.exception?.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, "Facebook authentication failed", Toast.LENGTH_SHORT).show()
                 }
             }
     }
 
-
+    // ✅ Google Login Handler
     private fun firebaseAuthWithGoogle(account: GoogleSignInAccount) {
         val credential = GoogleAuthProvider.getCredential(account.idToken, null)
         auth.signInWithCredential(credential)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
-                    val user = auth.currentUser
-                    val uid = user?.uid
-                    val name = user?.displayName
-                    val email = user?.email
-                    val profileUrl = user?.photoUrl?.toString()
-                    val dob = findViewById<EditText>(R.id.dob_edit_text).text.toString()
-                    saveUserToFirestore(name, email, uid, profileUrl, dob)
-                    startActivity(Intent(this, MainActivity::class.java))
-                    finish()
+                    val user = auth.currentUser ?: return@addOnCompleteListener
+                    val userRef = FirebaseFirestore.getInstance().collection("users").document(user.uid)
+                    val updateData = hashMapOf(
+                        "name" to (user.displayName ?: ""),
+                        "email" to (user.email ?: ""),
+                        "profileImage" to (user.photoUrl?.toString() ?: "")
+                    )
+                    userRef.set(updateData, SetOptions.merge())
+                        .addOnSuccessListener {
+                            goToMainActivity()
+                        }
                 } else {
-                    Toast.makeText(this, "Google authentication failed", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, "Google authentication failed", Toast.LENGTH_SHORT).show()
                 }
             }
     }
 
-    private fun saveUserToFirestore(name: String?, email: String?, uid: String?, profileUrl: String?, dob: String?) {
-        if (uid == null) return
-        val db = FirebaseFirestore.getInstance()
-        val userMap = hashMapOf(
-            "uid" to uid,
-            "name" to name,
-            "email" to email,
-            "profileUrl" to profileUrl,
-            "dob" to dob
-        )
-        db.collection("users").document(uid).set(userMap)
-            .addOnSuccessListener {
-                Log.d(TAG, "User added to Firestore")
-            }
-            .addOnFailureListener {
-                Log.e(TAG, "Failed to save user", it)
-            }
+    private fun goToMainActivity() {
+        startActivity(Intent(this, MainActivity::class.java))
+        finish()
     }
 }
-
-
-
-
