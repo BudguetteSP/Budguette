@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "134349038453-ea9v2u1r0142v82vl6h7mmt9i1nmsmne.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.budguette",
+            "certificate_hash": "a1bcd4fd04aaab45d118d12f7d09f178ed666526"
+          }
+        },
+        {
           "client_id": "134349038453-ge9m6oss1r0gkfe9j5kkhf59qtgda7iq.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
