@@ -3,7 +3,6 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:background="#F5F5F5"
     android:padding="12dp">
 
     <ImageView
@@ -20,7 +19,9 @@
         android:layout_width="0dp"
         android:layout_weight="1"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:padding="8dp"
+        android:background="@drawable/bg_comment_bubble">
 
         <TextView
             android:id="@+id/comment_user_name"
@@ -40,4 +41,3 @@
             android:textColor="#333333" />
     </LinearLayout>
 </LinearLayout>
-
