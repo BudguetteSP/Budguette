@@ -1,91 +1,111 @@
 package com.example.budguette
 
-import android.graphics.Color
+import android.app.AlertDialog
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.prolificinteractive.materialcalendarview.CalendarDay
-import com.prolificinteractive.materialcalendarview.MaterialCalendarView
 import com.prolificinteractive.materialcalendarview.DayViewDecorator
 import com.prolificinteractive.materialcalendarview.DayViewFacade
+import com.prolificinteractive.materialcalendarview.MaterialCalendarView
+import com.prolificinteractive.materialcalendarview.spans.DotSpan
 import java.text.SimpleDateFormat
 import java.util.*
 
 class CalendarFragment : Fragment() {
 
     private lateinit var calendarView: MaterialCalendarView
-    private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    private val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+    private val db = FirebaseFirestore.getInstance()
+    private val auth = FirebaseAuth.getInstance()
+
+    private val colors = mapOf(
+        "Monthly" to 0xFFFF0000.toInt(),   // Red
+        "Yearly" to 0xFF00FF00.toInt(),    // Green
+        "Weekly" to 0xFF0000FF.toInt(),    // Blue
+        "One-Time" to 0xFFFFA500.toInt()   // Orange
+    )
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
+        inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         val view = inflater.inflate(R.layout.fragment_calendar, container, false)
         calendarView = view.findViewById(R.id.calendarView)
-
-        loadSubscriptions()
-
+        fetchSubscriptionsAndDecorate()
         return view
     }
 
-    private fun loadSubscriptions() {
-        // Example subscriptions — replace with Firebase query in your app
-        val subscriptions = listOf(
-            Subscription("1", "userId", "Netflix", 12.99, "Monthly", "2025-09-05", ""),
-            Subscription("2", "userId", "Spotify", 9.99, "Weekly", "2025-09-03", "")
-        )
+    private fun fetchSubscriptionsAndDecorate() {
+        val userId = auth.currentUser?.uid ?: return
 
-        val events = mutableListOf<CalendarDay>()
+        db.collection("subscriptions")
+            .whereEqualTo("userId", userId)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val subscriptions = snapshot.documents.map { doc ->
+                    Subscription(
+                        id = doc.id,
+                        userId = doc.getString("userId") ?: "",
+                        name = doc.getString("name") ?: "",
+                        amount = doc.getDouble("amount") ?: 0.0,
+                        frequency = doc.getString("frequency") ?: "",
+                        startDate = doc.getString("startDate") ?: "",
+                        notes = doc.getString("notes") ?: ""
+                    )
+                }
 
-        for (sub in subscriptions) {
-            val startDate: Date = try {
-                dateFormat.parse(sub.startDate) ?: continue
-            } catch (e: Exception) {
-                continue
+                decorateCalendar(subscriptions)
             }
+            .addOnFailureListener { e ->
+                e.printStackTrace()
+            }
+    }
 
-            when (sub.frequency.lowercase()) {
-                "one-time" -> events.add(CalendarDay.from(startDate))
-                "weekly" -> {
-                    val cal = Calendar.getInstance().apply { time = startDate }
-                    for (i in 0..4) { // next 5 weeks
-                        events.add(CalendarDay.from(cal))
-                        cal.add(Calendar.WEEK_OF_YEAR, 1)
+    private fun decorateCalendar(subscriptions: List<Subscription>) {
+        val subsByDate = subscriptions.groupBy { it.startDate }
+
+        // Add decorators
+        subsByDate.forEach { (dateString, subs) ->
+            val date = sdf.parse(dateString) ?: return@forEach
+            val day = CalendarDay.from(date)
+
+            subs.forEach { sub ->
+                calendarView.addDecorator(object : DayViewDecorator {
+                    override fun shouldDecorate(dayToCheck: CalendarDay): Boolean {
+                        return dayToCheck == day
                     }
-                }
-                "monthly" -> {
-                    val cal = Calendar.getInstance().apply { time = startDate }
-                    for (i in 0..11) { // next 12 months
-                        events.add(CalendarDay.from(cal))
-                        cal.add(Calendar.MONTH, 1)
+
+                    override fun decorate(view: DayViewFacade) {
+                        view.addSpan(DotSpan(6f, colors[sub.frequency] ?: 0xFF000000.toInt()))
                     }
-                }
-                "yearly" -> {
-                    val cal = Calendar.getInstance().apply { time = startDate }
-                    for (i in 0..4) { // next 5 years
-                        events.add(CalendarDay.from(cal))
-                        cal.add(Calendar.YEAR, 1)
-                    }
-                }
+                })
             }
         }
 
-        // Decorate the calendar with dots
-        calendarView.addDecorator(EventDecorator(events))
+        // Set day click listener
+        calendarView.setOnDateChangedListener { widget, date, selected ->
+            val clickedDate = sdf.format(date.date)
+            val subsForDay = subsByDate[clickedDate]
+            if (!subsForDay.isNullOrEmpty()) {
+                val message = subsForDay.joinToString("\n") {
+                    "${it.name} - $${it.amount} (${it.frequency})"
+                }
+                AlertDialog.Builder(requireContext())
+                    .setTitle("Subscriptions on $clickedDate")
+                    .setMessage(message)
+                    .setPositiveButton("OK", null)
+                    .show()
+            }
+        }
     }
 }
 
-/** Simple decorator to highlight dates */
-class EventDecorator(private val dates: Collection<CalendarDay>) : DayViewDecorator {
 
-    override fun shouldDecorate(day: CalendarDay): Boolean {
-        return dates.contains(day)
-    }
 
-    override fun decorate(view: DayViewFacade) {
-        view.addSpan(com.prolificinteractive.materialcalendarview.spans.DotSpan(8f, Color.RED))
-    }
-}
+
+
