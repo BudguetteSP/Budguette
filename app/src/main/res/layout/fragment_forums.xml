@@ -43,7 +43,7 @@
         android:layout_margin="16dp"
         android:contentDescription="Create Post"
         android:src="@drawable/baseline_add_24"
-        app:backgroundTint="#B6862C"
+        app:backgroundTint="@color/gold"
         app:tint="@android:color/white" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
 

@@ -5,11 +5,11 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.floatingactionbutton.FloatingActionButton // ✅ use FAB
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -45,26 +45,30 @@ class ExpensesFragment : Fragment() {
             }
         })
 
-        val addButton: Button = view.findViewById(R.id.addTransactionButton)
+        // ✅ Changed from Button to FloatingActionButton
+        val addButton: FloatingActionButton = view.findViewById(R.id.addTransactionButton)
         addButton.setOnClickListener {
             startActivity(Intent(requireContext(), AddTransactionActivity::class.java))
         }
 
-        // Set the onItemClickListener to handle clicks on transactions
+        // Handle clicks on transactions
         transactionAdapter.setOnItemClickListener { transaction ->
             val intent = Intent(requireContext(), TransactionDetailActivity::class.java).apply {
                 putExtra("transactionId", transaction.id)
                 putExtra("userId", FirebaseAuth.getInstance().currentUser?.uid)
                 putExtra("name", transaction.name)
                 putExtra("type", transaction.type)
-                putExtra("date", android.text.format.DateFormat.format("MMM dd, yyyy", transaction.date).toString())
+                putExtra(
+                    "date",
+                    android.text.format.DateFormat.format("MMM dd, yyyy", transaction.date)
+                        .toString()
+                )
                 putExtra("cost", transaction.cost)
                 putExtra("notes", transaction.notes)
-                putExtra("category", transaction.category) // ✅ ADD THIS LINE
+                putExtra("category", transaction.category) // ✅ keep this
             }
             startActivity(intent)
         }
-
 
         return view
     }
@@ -84,7 +88,7 @@ class ExpensesFragment : Fragment() {
                     val transaction = doc.toObject(Transaction::class.java)
                     transactions.add(transaction)
                 }
-                filterTransactions(currentQuery) // 🧠 so that search results are preserved after reload
+                filterTransactions(currentQuery) // 🧠 preserve search results after reload
             }
             .addOnFailureListener { e ->
                 e.printStackTrace()
@@ -112,8 +116,8 @@ class ExpensesFragment : Fragment() {
         super.onResume()
         loadTransactions()
     }
-
 }
+
 
 
 

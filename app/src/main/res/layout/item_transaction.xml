@@ -1,41 +1,51 @@
-<LinearLayout
+<androidx.cardview.widget.CardView
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="12dp"
+    android:layout_margin="8dp"
+    card_view:cardCornerRadius="12dp"
+    card_view:cardElevation="4dp"
     android:background="#FFFFFF">
 
-    <TextView
-        android:id="@+id/transactionName"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Name"
-        android:textStyle="bold"
-        android:textSize="18sp"
-        android:textColor="#000000" />
+        android:orientation="vertical"
+        android:padding="16dp">
 
-    <TextView
-        android:id="@+id/transactionType"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Deposit or Expense"
-        android:textColor="#555555" />
+        <TextView
+            android:id="@+id/transactionName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Name"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:textColor="#000000" />
 
-    <TextView
-        android:id="@+id/transactionDate"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="April 26, 2025"
-        android:textColor="#777777" />
+        <TextView
+            android:id="@+id/transactionType"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Deposit or Expense"
+            android:textColor="#555555" />
 
-    <TextView
-        android:id="@+id/transactionCost"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="$0.00"
-        android:textStyle="bold"
-        android:textSize="16sp"
-        android:textColor="#B6862C" />
-</LinearLayout>
+        <TextView
+            android:id="@+id/transactionDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="April 26, 2025"
+            android:textColor="#777777" />
+
+        <TextView
+            android:id="@+id/transactionCost"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="$0.00"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:textColor="#B6862C" />
+    </LinearLayout>
+</androidx.cardview.widget.CardView>
+
 
