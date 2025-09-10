@@ -5,4 +5,23 @@
     <style name="NavItemTextStyle">
         <item name="android:textSize">12sp</item>
     </style>
+
+    <!-- Calendar Text Appearance -->
+    <style name="CalendarWeekDayText" parent="TextAppearance.AppCompat.Small">
+        <item name="android:textColor">@color/light_grey</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <style name="CalendarDateText" parent="TextAppearance.AppCompat.Medium">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="CalendarHeaderText" parent="TextAppearance.AppCompat.Medium">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+
 </resources>

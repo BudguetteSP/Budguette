@@ -15,13 +15,15 @@
         android:title="" />
 
     <item
-        android:id="@+id/nav_profile"
-        android:icon="@drawable/ic_profile"
+        android:id="@+id/nav_calendar"
+        android:icon="@drawable/ic_calendar_foreground"
         android:title="" />
 
     <item
         android:id="@+id/nav_more"
-        android:icon="@drawable/ic_more"
+        android:icon="@drawable/ic_community_foreground"
         android:title="" />
 </menu>
+
+
 

@@ -24,11 +24,12 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_home -> loadFragment(HomeFragment())
                 R.id.nav_expenses -> loadFragment(ExpensesFragment())
                 R.id.nav_subscriptions -> loadFragment(SubscriptionsFragment())
-                R.id.nav_profile -> loadFragment(ProfileFragment())
-                R.id.nav_more -> showMoreMenu(bottomNav, item)
+                R.id.nav_calendar -> loadFragment(CalendarFragment())
+                R.id.nav_more -> showMoreMenu(bottomNav, item) // Profile and Forums now here
             }
             true
         }
+
 
         // Load the default fragment
         if (savedInstanceState == null) {
@@ -49,8 +50,8 @@ class MainActivity : AppCompatActivity() {
             loadFragment(ForumsFragment())
             true
         }
-        moreMenu.menu.add("Calendar").setOnMenuItemClickListener {
-            loadFragment(CalendarFragment())
+        moreMenu.menu.add("Profile").setOnMenuItemClickListener {
+            loadFragment(ProfileFragment())
             true
         }
         moreMenu.show()

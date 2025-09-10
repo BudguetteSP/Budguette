@@ -1,46 +1,105 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:background="@color/navy_blue"
+    android:padding="16dp"
+    android:fillViewport="true">
 
-    <!-- Top row: space for legend button -->
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <TextView
-            android:id="@+id/calendarTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Calendar"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_centerInParent="true" />
-
-        <ImageView
-            android:id="@+id/legendIcon"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_alignParentEnd="true"
-            android:src="@android:drawable/ic_menu_info_details"
-            android:contentDescription="Legend"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:padding="4dp"
-            android:layout_marginEnd="4dp"/>
-    </RelativeLayout>
-
-    <!-- Calendar below the header -->
-    <com.prolificinteractive.materialcalendarview.MaterialCalendarView
-        android:id="@+id/calendarView"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"/>
-</LinearLayout>
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
+        <!-- Legend Icon -->
+        <ImageView
+            android:id="@+id/legendIcon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@android:drawable/ic_menu_info_details"
+            android:contentDescription="@string/legend_button_description"
+            android:layout_gravity="end"
+            app:tint="@color/gold"
+            android:padding="8dp"/>
+
+        <!-- Calendar -->
+        <com.prolificinteractive.materialcalendarview.MaterialCalendarView
+            android:id="@+id/calendarView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/black"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="16dp"
+            app:mcv_showOtherDates="all"
+            app:mcv_selectionColor="@color/gold"
+            app:mcv_weekDayTextAppearance="@style/CalendarWeekDayText"
+            app:mcv_dateTextAppearance="@style/CalendarDateText"
+            app:mcv_headerTextAppearance="@style/CalendarHeaderText"
+            app:mcv_arrowColor="@color/white"/>
 
 
+        <!-- Filter Buttons -->
+        <LinearLayout
+            android:id="@+id/filterLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="3"
+            android:layout_marginBottom="16dp">
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/startDateBtn"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/start_date_btn_default"
+                android:textColor="@color/gold"/>
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/endDateBtn"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:text="@string/end_date_btn_default"
+                android:textColor="@color/gold"/>
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/applyFilterBtn"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/apply_filter_btn"
+                android:textColor="@color/gold"/>
+        </LinearLayout>
+
+        <!-- Summary Card -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@color/black"
+            android:padding="16dp"
+            android:layout_marginBottom="32dp"
+            android:elevation="4dp"
+            android:clipToPadding="false"
+            android:clipChildren="false"
+            android:layout_gravity="center">
+
+            <TextView
+                android:id="@+id/summaryText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/summary_title"
+                android:textSize="16sp"
+                android:textColor="@color/light_grey"/>
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>
 
