@@ -2,9 +2,13 @@ package com.example.budguette
 
 import android.app.AlertDialog
 import android.os.Bundle
+import android.text.SpannableString
+import android.text.SpannableStringBuilder
+import android.text.style.ForegroundColorSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import androidx.fragment.app.Fragment
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -36,6 +40,11 @@ class CalendarFragment : Fragment() {
     ): View {
         val view = inflater.inflate(R.layout.fragment_calendar, container, false)
         calendarView = view.findViewById(R.id.calendarView)
+
+        // Legend icon
+        val legendIcon: ImageView = view.findViewById(R.id.legendIcon)
+        legendIcon.setOnClickListener { showLegendDialog() }
+
         fetchSubscriptionsAndDecorate()
         return view
     }
@@ -88,7 +97,7 @@ class CalendarFragment : Fragment() {
         }
 
         // Set day click listener
-        calendarView.setOnDateChangedListener { widget, date, selected ->
+        calendarView.setOnDateChangedListener { _, date, _ ->
             val clickedDate = sdf.format(date.date)
             val subsForDay = subsByDate[clickedDate]
             if (!subsForDay.isNullOrEmpty()) {
@@ -103,9 +112,22 @@ class CalendarFragment : Fragment() {
             }
         }
     }
+
+    private fun showLegendDialog() {
+        val builder = SpannableStringBuilder()
+
+        colors.forEach { (label, color) ->
+            val dot = SpannableString("● ") // use a circle character
+            dot.setSpan(ForegroundColorSpan(color), 0, dot.length, 0)
+            builder.append(dot).append(label).append("\n")
+        }
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Legend")
+            .setMessage(builder)
+            .setPositiveButton("OK", null)
+            .show()
+    }
 }
-
-
-
 
 
