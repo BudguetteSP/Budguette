@@ -1,8 +1,9 @@
 package com.example.budguette
 
+import android.app.AlertDialog
 import android.os.Bundle
-import android.view.MenuItem
-import android.widget.PopupMenu
+import android.widget.ArrayAdapter
+import android.widget.ListView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -25,11 +26,10 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_expenses -> loadFragment(ExpensesFragment())
                 R.id.nav_subscriptions -> loadFragment(SubscriptionsFragment())
                 R.id.nav_calendar -> loadFragment(CalendarFragment())
-                R.id.nav_more -> showMoreMenu(bottomNav, item) // Profile and Forums now here
+                R.id.nav_more -> showMoreMenu() // Custom dialog with Profile + Forums
             }
             true
         }
-
 
         // Load the default fragment
         if (savedInstanceState == null) {
@@ -43,17 +43,33 @@ class MainActivity : AppCompatActivity() {
             .commit()
     }
 
-    private fun showMoreMenu(bottomNav: BottomNavigationView, anchorItem: MenuItem) {
-        // Show a popup menu anchored to the "More" item
-        val moreMenu = PopupMenu(this, bottomNav.findViewById(anchorItem.itemId))
-        moreMenu.menu.add("Forums").setOnMenuItemClickListener {
-            loadFragment(ForumsFragment())
-            true
+    private fun showMoreMenu() {
+        val options = listOf(
+            "Profile" to R.drawable.ic_profile,
+            "Forums" to R.drawable.ic_forums
+        )
+
+        val bottomSheetDialog = com.google.android.material.bottomsheet.BottomSheetDialog(this)
+        val view = layoutInflater.inflate(R.layout.bottom_sheet_more, null)
+        val listView = view.findViewById<ListView>(R.id.moreListView)
+
+        val adapter = MoreMenuAdapter(this, options)
+        listView.adapter = adapter
+
+        listView.setOnItemClickListener { _, _, position, _ ->
+            when (options[position].first) {
+                "Profile" -> loadFragment(ProfileFragment())
+                "Forums" -> loadFragment(ForumsFragment())
+            }
+            bottomSheetDialog.dismiss()
         }
-        moreMenu.menu.add("Profile").setOnMenuItemClickListener {
-            loadFragment(ProfileFragment())
-            true
-        }
-        moreMenu.show()
+
+        bottomSheetDialog.setContentView(view)
+        bottomSheetDialog.show()
     }
+
+
+
+
 }
+
