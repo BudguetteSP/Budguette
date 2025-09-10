@@ -5,8 +5,8 @@
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
     card_view:cardCornerRadius="12dp"
-    card_view:cardElevation="4dp"
-    android:background="#FFFFFF">
+    card_view:cardElevation="6dp"
+    android:background="@android:color/white">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -14,6 +14,7 @@
         android:orientation="vertical"
         android:padding="16dp">
 
+        <!-- Subscription Name -->
         <TextView
             android:id="@+id/subscriptionName"
             android:layout_width="wrap_content"
@@ -21,36 +22,48 @@
             android:text="Subscription Name"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:textColor="#000000" />
+            android:textColor="@color/navy_blue"
+            android:layout_marginBottom="8dp"/>
 
+        <!-- Cost -->
         <TextView
             android:id="@+id/subscriptionCost"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="$12.99"
             android:textSize="16sp"
-            android:textColor="#B6862C" />
+            android:textColor="@color/redExpense"/>
 
+        <!-- Frequency under cost -->
+        <TextView
+            android:id="@+id/subscriptionFrequency"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Monthly"
+            android:textSize="14sp"
+            android:textColor="@android:color/black"
+            android:layout_marginBottom="2dp"/> <!-- smaller spacing -->
+
+        <!-- Due Date -->
         <TextView
             android:id="@+id/subscriptionDueDate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Due: Select Date"
             android:textSize="16sp"
-            android:textColor="#002147"
+            android:textColor="@color/navy_blue"
             android:clickable="true"
-            android:focusable="true" />
+            android:focusable="true"
+            android:layout_marginBottom="4dp" />
 
+        <!-- Notes -->
         <TextView
             android:id="@+id/subscriptionNotes"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Notes: Example notes"
             android:textSize="14sp"
-            android:textColor="#666666" />
+            android:textColor="@color/light_grey"/>
 
     </LinearLayout>
 </androidx.cardview.widget.CardView>
-
-
-

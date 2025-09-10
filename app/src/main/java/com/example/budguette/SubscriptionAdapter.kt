@@ -22,6 +22,7 @@ class SubscriptionAdapter(
     inner class SubscriptionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val nameText: TextView = itemView.findViewById(R.id.subscriptionName)
         val costText: TextView = itemView.findViewById(R.id.subscriptionCost)
+        val frequencyText: TextView = itemView.findViewById(R.id.subscriptionFrequency)
         val dueText: TextView = itemView.findViewById(R.id.subscriptionDueDate)
         val notesText: TextView = itemView.findViewById(R.id.subscriptionNotes)
     }
@@ -36,6 +37,7 @@ class SubscriptionAdapter(
         val subscription = filteredList[position]
         holder.nameText.text = subscription.name
         holder.costText.text = "Cost: $${subscription.amount}"
+        holder.frequencyText.text = "Frequency: ${subscription.frequency}"
         holder.dueText.text = "Due: ${subscription.startDate}"
         holder.notesText.text = "Notes: ${subscription.notes}"
 
