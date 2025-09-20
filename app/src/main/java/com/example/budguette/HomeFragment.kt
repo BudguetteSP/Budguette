@@ -114,6 +114,9 @@ class HomeFragment : Fragment() {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
         val db = FirebaseFirestore.getInstance()
 
+        val monthSdf = SimpleDateFormat("yyyy-MM", Locale.getDefault())
+        val currentMonth = monthSdf.format(Date()) // e.g., "2025-09"
+
         db.collection("users")
             .document(userId)
             .collection("transactions")
@@ -127,8 +130,16 @@ class HomeFragment : Fragment() {
                 for (doc in querySnapshot) {
                     val cost = doc.getDouble("cost") ?: 0.0
                     val category = doc.getString("category") ?: "Uncategorized"
-                    totalExpenses += cost
-                    categoryMap[category] = categoryMap.getOrDefault(category, 0.0) + cost
+
+                    // Transactions store date as a number (milliseconds)
+                    val timestampMillis = doc.getLong("date") ?: 0L
+                    val date = Date(timestampMillis)
+
+                    // Only include if in current month
+                    if (monthSdf.format(date) == currentMonth) {
+                        totalExpenses += cost
+                        categoryMap[category] = categoryMap.getOrDefault(category, 0.0) + cost
+                    }
                 }
 
                 totalExpensesTextView.text = "Total Expenses: $${"%.2f".format(totalExpenses)}"
@@ -144,11 +155,19 @@ class HomeFragment : Fragment() {
                 updatePieChart(expensePieChart, pieEntries)
                 updateBudgetChart()
             }
+            .addOnFailureListener {
+                totalExpensesTextView.text = "Failed to load expenses."
+                categoryBreakdownTextView.text = ""
+            }
     }
 
     private fun loadSubscriptionSummary() {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
         val db = FirebaseFirestore.getInstance()
+
+        val startSdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val monthSdf = SimpleDateFormat("yyyy-MM", Locale.getDefault())
+        val currentMonth = monthSdf.format(Date())
 
         db.collection("subscriptions")
             .whereEqualTo("userId", userId)
@@ -161,15 +180,21 @@ class HomeFragment : Fragment() {
                 for (doc in querySnapshot) {
                     val cost = doc.getDouble("amount") ?: 0.0
                     val frequency = doc.getString("frequency") ?: "Unknown"
-                    totalSubscriptions += cost
-                    frequencyMap[frequency] = frequencyMap.getOrDefault(frequency, 0.0) + cost
+                    val startDateStr = doc.getString("startDate") ?: continue
+                    val startDate = startSdf.parse(startDateStr) ?: continue
+
+                    // Include if subscription is monthly or started this month
+                    if (frequency == "Monthly" || monthSdf.format(startDate) == currentMonth) {
+                        totalSubscriptions += cost
+                        frequencyMap[frequency] = frequencyMap.getOrDefault(frequency, 0.0) + cost
+                    }
                 }
 
                 totalSubscriptionsTextView.text =
                     "Total Subscriptions: $${"%.2f".format(totalSubscriptions)}"
 
-                val breakdown = frequencyMap.entries.joinToString("\n") { (frequency, sum) ->
-                    "$frequency: $${"%.2f".format(sum)}"
+                val breakdown = frequencyMap.entries.joinToString("\n") { (freq, sum) ->
+                    "$freq: $${"%.2f".format(sum)}"
                 }
                 subscriptionBreakdownTextView.text = breakdown
 
@@ -179,6 +204,10 @@ class HomeFragment : Fragment() {
                 updatePieChart(subscriptionPieChart, pieEntries)
                 updateBudgetChart()
             }
+            .addOnFailureListener {
+                totalSubscriptionsTextView.text = "Failed to load subscriptions."
+                subscriptionBreakdownTextView.text = ""
+            }
     }
 
     private fun updateBudgetChart() {
@@ -186,18 +215,27 @@ class HomeFragment : Fragment() {
 
         val used = totalExpenses + totalSubscriptions
         val remaining = monthlyBudget - used
-        remainingBudgetTextView.text = "Remaining Budget: $${"%.2f".format(remaining)}"
 
-        val entries = listOf(
-            PieEntry(used.toFloat(), "Used"),
-            PieEntry(if (remaining >= 0) remaining.toFloat() else 0f, "Remaining")
-        )
+        // Update remaining budget text
+        remainingBudgetTextView.text = if (remaining >= 0) {
+            "Remaining Budget: $${"%.2f".format(remaining)}"
+        } else {
+            "Over Budget: $${"%.2f".format(-remaining)}"
+        }
+
+        // Pie chart entries
+        val entries = mutableListOf<PieEntry>()
+        if (used > 0) entries.add(PieEntry(used.toFloat(), "Used"))
+        if (remaining > 0) entries.add(PieEntry(remaining.toFloat(), "Remaining"))
+        if (used > monthlyBudget) entries.add(PieEntry((used - monthlyBudget).toFloat(), "Over"))
+
         val dataSet = PieDataSet(entries, "")
         dataSet.colors = listOf(
             android.graphics.Color.parseColor("#FF6347"), // red for used
-            android.graphics.Color.parseColor("#32CD32")  // green for remaining
+            android.graphics.Color.parseColor("#32CD32"), // green for remaining
+            android.graphics.Color.parseColor("#8B0000")  // dark red for over budget
         )
-        dataSet.valueTextColor = android.graphics.Color.WHITE  // make slice values visible
+        dataSet.valueTextColor = android.graphics.Color.WHITE
         dataSet.valueTextSize = 14f
 
         val data = PieData(dataSet)
@@ -205,7 +243,7 @@ class HomeFragment : Fragment() {
         budgetPieChart.setUsePercentValues(true)
         budgetPieChart.description.isEnabled = false
         budgetPieChart.setDrawEntryLabels(true)
-        budgetPieChart.setEntryLabelColor(android.graphics.Color.WHITE) // slice labels inside chart
+        budgetPieChart.setEntryLabelColor(android.graphics.Color.WHITE)
         budgetPieChart.setEntryLabelTextSize(12f)
         budgetPieChart.isDrawHoleEnabled = true
         budgetPieChart.setHoleColor(android.graphics.Color.parseColor("#0A1F44"))
@@ -224,6 +262,7 @@ class HomeFragment : Fragment() {
         budgetPieChart.animateY(1000)
         budgetPieChart.invalidate()
     }
+
 
 
     private fun updatePieChart(pieChart: PieChart, entries: List<PieEntry>) {
