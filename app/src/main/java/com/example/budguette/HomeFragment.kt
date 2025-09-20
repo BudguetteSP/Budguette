@@ -167,7 +167,8 @@ class HomeFragment : Fragment() {
 
         val startSdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         val monthSdf = SimpleDateFormat("yyyy-MM", Locale.getDefault())
-        val currentMonth = monthSdf.format(Date())
+        val today = Calendar.getInstance()
+        val currentMonth = monthSdf.format(today.time)
 
         db.collection("subscriptions")
             .whereEqualTo("userId", userId)
@@ -183,13 +184,55 @@ class HomeFragment : Fragment() {
                     val startDateStr = doc.getString("startDate") ?: continue
                     val startDate = startSdf.parse(startDateStr) ?: continue
 
-                    // Include if subscription is monthly or started this month
-                    if (frequency == "Monthly" || monthSdf.format(startDate) == currentMonth) {
-                        totalSubscriptions += cost
-                        frequencyMap[frequency] = frequencyMap.getOrDefault(frequency, 0.0) + cost
+                    // Determine first day of current month
+                    val calMonthStart = Calendar.getInstance().apply {
+                        set(Calendar.YEAR, today.get(Calendar.YEAR))
+                        set(Calendar.MONTH, today.get(Calendar.MONTH))
+                        set(Calendar.DAY_OF_MONTH, 1)
+                    }
+
+                    val monthlyCost = when (frequency) {
+                        "One-Time" -> if (monthSdf.format(startDate) == currentMonth) cost else 0.0
+
+                        "Daily" -> {
+                            // Count from the later of startDate or start of month
+                            val firstDayToCount = if (startDate.after(calMonthStart.time)) startDate else calMonthStart.time
+                            val lastDayToCount = today.time
+
+                            val daysCount = ((lastDayToCount.time - firstDayToCount.time) / (1000 * 60 * 60 * 24)).toInt() + 1
+                            cost * daysCount
+                        }
+
+                        "Weekly" -> {
+                            // Count number of weeks elapsed since first week of month
+                            val firstDayToCount = if (startDate.after(calMonthStart.time)) startDate else calMonthStart.time
+
+                            val calFirst = Calendar.getInstance()
+                            calFirst.time = firstDayToCount
+
+                            val weeksElapsed = ((today.timeInMillis - calFirst.timeInMillis) / (1000L * 60 * 60 * 24 * 7)).toInt() + 1
+                            cost * weeksElapsed
+                        }
+
+                        "Monthly" -> cost
+
+                        "Yearly" -> {
+                            val calStart = Calendar.getInstance()
+                            calStart.time = startDate
+                            // Only count if this month is the renewal month
+                            if (calStart.get(Calendar.MONTH) == today.get(Calendar.MONTH)) cost else 0.0
+                        }
+
+                        else -> 0.0
+                    }
+
+                    if (monthlyCost > 0) {
+                        totalSubscriptions += monthlyCost
+                        frequencyMap[frequency] = frequencyMap.getOrDefault(frequency, 0.0) + monthlyCost
                     }
                 }
 
+                // Update summary text
                 totalSubscriptionsTextView.text =
                     "Total Subscriptions: $${"%.2f".format(totalSubscriptions)}"
 
@@ -198,6 +241,7 @@ class HomeFragment : Fragment() {
                 }
                 subscriptionBreakdownTextView.text = breakdown
 
+                // Pie chart entries
                 frequencyMap.entries.forEach {
                     pieEntries.add(PieEntry(it.value.toFloat(), it.key))
                 }
@@ -209,6 +253,9 @@ class HomeFragment : Fragment() {
                 subscriptionBreakdownTextView.text = ""
             }
     }
+
+
+
 
     private fun updateBudgetChart() {
         if (!this::budgetPieChart.isInitialized) return
@@ -272,7 +319,9 @@ class HomeFragment : Fragment() {
             android.graphics.Color.parseColor("#87CEEB"), // sky blue
             android.graphics.Color.parseColor("#32CD32"), // lime green
             android.graphics.Color.parseColor("#FF4500"), // orange red
-            android.graphics.Color.parseColor("#0A1F44")  // navy blue
+            android.graphics.Color.parseColor("#0A1F44"),  // navy blue
+            android.graphics.Color.parseColor("#800080") // purple
+
         )
         dataSet.valueTextColor = android.graphics.Color.BLACK
         dataSet.valueTextSize = 14f

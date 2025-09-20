@@ -28,10 +28,11 @@
 
 
     <string-array name="subscription_frequencies">
+        <item>One-Time</item>
+        <item>Daily</item>
+        <item>Weekly</item>
         <item>Monthly</item>
         <item>Yearly</item>
-        <item>Weekly</item>
-        <item>One-Time</item>
     </string-array>
 
 </resources>
