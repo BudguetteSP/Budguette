@@ -24,6 +24,15 @@
             app:tint="@color/gold"
             android:padding="8dp"/>
 
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/tabLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/navy_blue"
+            app:tabSelectedTextColor="@color/gold"
+            app:tabTextColor="@color/light_grey"
+            app:tabIndicatorColor="@color/gold"/>
+
         <!-- Calendar -->
         <com.prolificinteractive.materialcalendarview.MaterialCalendarView
             android:id="@+id/calendarView"

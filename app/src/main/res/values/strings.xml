@@ -25,6 +25,8 @@
     <string name="ok">OK</string>
     <string name="select_valid_range">Please select a valid start and end date.</string>
     <string name="subscriptions_on_date">Subscriptions on %1$s</string>
+    <string name="transactions_on_date">Transactions on %1$s</string>
+
 
 
     <string-array name="subscription_frequencies">
