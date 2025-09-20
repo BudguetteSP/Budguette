@@ -29,7 +29,6 @@ class CalendarFragment : Fragment() {
     private lateinit var endDateBtn: Button
     private lateinit var applyFilterBtn: Button
     private lateinit var tabLayout: TabLayout
-    private lateinit var legendIcon: ImageView
 
     private val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US)
     private val db = FirebaseFirestore.getInstance()
@@ -62,9 +61,9 @@ class CalendarFragment : Fragment() {
         endDateBtn = view.findViewById(R.id.endDateBtn)
         applyFilterBtn = view.findViewById(R.id.applyFilterBtn)
         tabLayout = view.findViewById(R.id.tabLayout)
-        legendIcon = view.findViewById(R.id.legendIcon)
+        val legendIcon: ImageView = view.findViewById(R.id.legendIcon)
 
-        // Tabs setup
+        // Tabs
         tabLayout.addTab(tabLayout.newTab().setText("Subscriptions"))
         tabLayout.addTab(tabLayout.newTab().setText("Expenses"))
         tabLayout.addTab(tabLayout.newTab().setText("Deposits"))
@@ -77,13 +76,11 @@ class CalendarFragment : Fragment() {
             override fun onTabReselected(tab: TabLayout.Tab) {}
         })
 
-        // Legend click
         legendIcon.setOnClickListener { showLegendDialog() }
 
-        // Date pickers
         startDateBtn.setOnClickListener { pickDate(true) }
         endDateBtn.setOnClickListener { pickDate(false) }
-        applyFilterBtn.setOnClickListener { applyFilter() }
+        applyFilterBtn.setOnClickListener { decorateCalendarForTab() }
 
         fetchSubscriptions()
         fetchTransactions()
@@ -132,8 +129,9 @@ class CalendarFragment : Fragment() {
 
     private fun fetchTransactions() {
         val userId = auth.currentUser?.uid ?: return
-        db.collection("transactions")
-            .whereEqualTo("userId", userId)
+        db.collection("users")
+            .document(userId)
+            .collection("transactions")
             .get()
             .addOnSuccessListener { snapshot ->
                 allTransactions = snapshot.documents.map { doc ->
@@ -149,60 +147,29 @@ class CalendarFragment : Fragment() {
                 }
                 decorateCalendarForTab()
             }
+            .addOnFailureListener { e ->
+                summaryText.text = "Failed to fetch transactions: ${e.message}"
+            }
     }
 
-    private fun applyFilter() {
-        if (startDate == null || endDate == null) {
-            summaryText.text = getString(R.string.select_valid_range)
-            return
-        }
-
-        when (currentTab) {
-            "Subscriptions" -> {
-                val filtered = allSubscriptions.filter { sub ->
-                    val subDate = sdf.parse(sub.startDate) ?: return@filter false
-                    when (sub.frequency) {
-                        "One-Time" -> !subDate.before(startDate) && !subDate.after(endDate)
-                        "Daily", "Weekly", "Monthly", "Yearly" -> !subDate.after(endDate)
-                        else -> false
-                    }
-                }
-                decorateSubscriptions(filtered)
-            }
-            "Expenses" -> {
-                val filtered = allTransactions.filter { txn ->
-                    txn.type.equals("expense", true) &&
-                            Date(txn.date).let { !it.before(startDate) && !it.after(endDate) }
-                }
-                decorateTransactions(filtered, "expense", expenseColor)
-            }
-            "Deposits" -> {
-                val filtered = allTransactions.filter { txn ->
-                    txn.type.equals("deposit", true) &&
-                            Date(txn.date).let { !it.before(startDate) && !it.after(endDate) }
-                }
-                decorateTransactions(filtered, "deposit", depositColor)
-            }
-        }
-
-        updateSummaryForTab()
-    }
 
     private fun decorateCalendarForTab() {
         calendarView.removeDecorators()
         when (currentTab) {
-            "Subscriptions" -> decorateSubscriptions(allSubscriptions)
-            "Expenses" -> decorateTransactions(allTransactions, "expense", expenseColor)
-            "Deposits" -> decorateTransactions(allTransactions, "deposit", depositColor)
+            "Subscriptions" -> decorateSubscriptions()
+            "Expenses" -> decorateTransactions("Expense", expenseColor)
+            "Deposits" -> decorateTransactions("Deposit", depositColor)
         }
-
-        setupDayClick(allSubscriptions, allTransactions)
-        updateSummaryForTab()
     }
 
-    private fun decorateSubscriptions(subscriptions: List<Subscription>) {
-        val subsByDate = subscriptions.groupBy { it.startDate }
-        calendarView.removeDecorators()
+    private fun decorateSubscriptions() {
+        val filteredSubs = allSubscriptions.filter { sub ->
+            val subDate = sdf.parse(sub.startDate) ?: return@filter false
+            (startDate == null || !subDate.before(startDate)) &&
+                    (endDate == null || !subDate.after(endDate))
+        }
+
+        val subsByDate = filteredSubs.groupBy { it.startDate }
 
         for ((dateString, subs) in subsByDate) {
             val date = sdf.parse(dateString) ?: continue
@@ -217,10 +184,25 @@ class CalendarFragment : Fragment() {
             }
         }
 
-        // Vertical summary
-        val totals = subscriptions.groupBy { it.frequency }
-            .mapValues { entry -> entry.value.sumOf { it.amount } }
+        // Click dialog
+        calendarView.setOnDateChangedListener { _, date, _ ->
+            val clickedDate = sdf.format(date.date)
+            val subsForDay = subsByDate[clickedDate]
+            if (!subsForDay.isNullOrEmpty()) {
+                val message = subsForDay.joinToString("\n") {
+                    "${it.name} - $${it.amount} (${it.frequency})"
+                }
+                AlertDialog.Builder(requireContext())
+                    .setTitle("Subscriptions on $clickedDate")
+                    .setMessage(message)
+                    .setPositiveButton("OK", null)
+                    .show()
+            }
+        }
 
+        // Summary vertical
+        val totals = filteredSubs.groupBy { it.frequency }
+            .mapValues { entry -> entry.value.sumOf { it.amount } }
         summaryText.text = """
             Daily: ${totals["Daily"] ?: 0.0}
             Weekly: ${totals["Weekly"] ?: 0.0}
@@ -230,12 +212,16 @@ class CalendarFragment : Fragment() {
         """.trimIndent()
     }
 
-    private fun decorateTransactions(transactions: List<Transaction>, type: String, color: Int) {
-        val txnsByDate = transactions.filter { it.type.equals(type, true) }
-            .groupBy { sdf.format(Date(it.date)) }
-        calendarView.removeDecorators()
+    private fun decorateTransactions(type: String, color: Int) {
+        val filteredTxns = allTransactions.filter { it.type.equals(type, ignoreCase = true) }
+            .filter { txn ->
+                val txnDate = Date(txn.date)
+                (startDate == null || !txnDate.before(startDate)) &&
+                        (endDate == null || !txnDate.after(endDate))
+            }
 
-        var total = 0.0
+        val txnsByDate = filteredTxns.groupBy { sdf.format(Date(it.date)) }
+
         for ((dateString, txns) in txnsByDate) {
             val date = sdf.parse(dateString) ?: continue
             val day = CalendarDay.from(date)
@@ -247,10 +233,27 @@ class CalendarFragment : Fragment() {
                     }
                 })
             }
-            total += txns.sumOf { it.cost }
         }
 
-        val label = if (type == "expense") "Expenses" else "Deposits"
+        // Click dialog
+        calendarView.setOnDateChangedListener { _, date, _ ->
+            val clickedDate = sdf.format(date.date)
+            val txnsForDay = txnsByDate[clickedDate]
+            if (!txnsForDay.isNullOrEmpty()) {
+                val message = txnsForDay.joinToString("\n") {
+                    "${it.name} - $${it.cost} (${it.type})"
+                }
+                AlertDialog.Builder(requireContext())
+                    .setTitle("$type on $clickedDate")
+                    .setMessage(message)
+                    .setPositiveButton("OK", null)
+                    .show()
+            }
+        }
+
+        // Summary
+        val total = filteredTxns.sumOf { it.cost }
+        val label = if (type.equals("Expense", true)) "Expenses" else "Deposits"
         summaryText.text = "$label Total: $${"%.2f".format(total)}"
     }
 
@@ -282,93 +285,5 @@ class CalendarFragment : Fragment() {
             .setPositiveButton("OK", null)
             .show()
     }
-
-    private fun setupDayClick(subscriptions: List<Subscription>, transactions: List<Transaction>) {
-        calendarView.setOnDateChangedListener { _, date, _ ->
-            val clickedDate = sdf.format(date.date)
-            val messageBuilder = StringBuilder()
-
-            if (currentTab == "Subscriptions") {
-                val subsForDay = subscriptions.filter { it.startDate == clickedDate }
-                if (subsForDay.isNotEmpty()) {
-                    for (sub in subsForDay) {
-                        messageBuilder.append("${sub.name} - $${sub.amount} (${sub.frequency})\n")
-                    }
-                }
-            } else if (currentTab == "Expenses") {
-                val expensesForDay = transactions.filter {
-                    it.type.equals("expense", true) && sdf.format(Date(it.date)) == clickedDate
-                }
-                if (expensesForDay.isNotEmpty()) {
-                    for (txn in expensesForDay) {
-                        messageBuilder.append("${txn.name} - $${txn.cost} (${txn.category})\n")
-                    }
-                }
-            } else if (currentTab == "Deposits") {
-                val depositsForDay = transactions.filter {
-                    it.type.equals("deposit", true) && sdf.format(Date(it.date)) == clickedDate
-                }
-                if (depositsForDay.isNotEmpty()) {
-                    for (txn in depositsForDay) {
-                        messageBuilder.append("${txn.name} - $${txn.cost} (${txn.category})\n")
-                    }
-                }
-            }
-
-            if (messageBuilder.isNotEmpty()) {
-                AlertDialog.Builder(requireContext())
-                    .setTitle("Details for $clickedDate")
-                    .setMessage(messageBuilder.toString())
-                    .setPositiveButton("OK", null)
-                    .show()
-            }
-        }
-    }
-
-    private fun updateSummaryForTab() {
-        if (currentTab == "Subscriptions") {
-            val filteredSubs = allSubscriptions.filter { sub ->
-                val subDate = sdf.parse(sub.startDate) ?: return@filter false
-                (startDate == null || !subDate.before(startDate)) &&
-                        (endDate == null || !subDate.after(endDate))
-            }
-
-            val totals = filteredSubs.groupBy { it.frequency }
-                .mapValues { entry -> entry.value.sumOf { it.amount } }
-
-            val daily = totals["Daily"] ?: 0.0
-            val weekly = totals["Weekly"] ?: 0.0
-            val monthly = totals["Monthly"] ?: 0.0
-            val yearly = totals["Yearly"] ?: 0.0
-            val oneTime = totals["One-Time"] ?: 0.0
-
-            summaryText.text = """
-            Daily: $daily
-            Weekly: $weekly
-            Monthly: $monthly
-            Yearly: $yearly
-            One-Time: $oneTime
-        """.trimIndent()
-
-        } else if (currentTab == "Expenses") {
-            val filteredTxns = allTransactions.filter { txn ->
-                txn.type.equals("expense", true) &&
-                        (startDate == null || Date(txn.date) >= startDate) &&
-                        (endDate == null || Date(txn.date) <= endDate)
-            }
-            val total = filteredTxns.sumOf { it.cost }
-            summaryText.text = "Expenses Total: $${"%.2f".format(total)}"
-
-        } else if (currentTab == "Deposits") {
-            val filteredTxns = allTransactions.filter { txn ->
-                txn.type.equals("deposit", true) &&
-                        (startDate == null || Date(txn.date) >= startDate) &&
-                        (endDate == null || Date(txn.date) <= endDate)
-            }
-            val total = filteredTxns.sumOf { it.cost }
-            summaryText.text = "Deposits Total: $${"%.2f".format(total)}"
-        }
-    }
-
-
 }
+
