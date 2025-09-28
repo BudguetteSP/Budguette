@@ -6,10 +6,10 @@ import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Filter
 import android.widget.Filterable
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import java.text.SimpleDateFormat
 import java.util.*
 
 class SubscriptionAdapter(
@@ -19,9 +19,10 @@ class SubscriptionAdapter(
     private val originalList: MutableList<Subscription> = mutableListOf()
     private var filteredList: MutableList<Subscription> = mutableListOf()
 
-    // Current filters
     private var searchQuery: String = ""
     private var frequencyFilter: String = "All"
+    private var amountFilter: String = "All"
+    private var dueFilter: String = "All"
 
     inner class SubscriptionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val nameText: TextView = itemView.findViewById(R.id.subscriptionName)
@@ -79,24 +80,69 @@ class SubscriptionAdapter(
         applyFilters()
     }
 
+    fun applyAmount(amount: String) {
+        amountFilter = amount
+        applyFilters()
+    }
+
+    fun applyDue(due: String) {
+        dueFilter = due
+        applyFilters()
+    }
+
     private fun applyFilters() {
+        val today = Calendar.getInstance().time
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+
         filteredList = originalList.filter { subscription ->
             val matchesFrequency = (frequencyFilter == "All") || (subscription.frequency == frequencyFilter)
             val matchesSearch = subscription.name.contains(searchQuery, ignoreCase = true)
-            matchesFrequency && matchesSearch
+            val matchesAmount = when (amountFilter) {
+                "<5" -> subscription.amount < 5
+                "5-20" -> subscription.amount in 5.0..20.0
+                "20-50" -> subscription.amount in 20.0..50.0
+                ">50" -> subscription.amount > 50
+                else -> true
+            }
+
+            val matchesDue = when (dueFilter) {
+                "Today" -> subscription.startDate == sdf.format(today)
+                "This Week" -> {
+                    val cal = Calendar.getInstance()
+                    val dayOfWeek = cal.get(Calendar.DAY_OF_WEEK)
+                    val startOfWeek = Calendar.getInstance()
+                    startOfWeek.add(Calendar.DAY_OF_MONTH, -(dayOfWeek - 1))
+                    val endOfWeek = Calendar.getInstance()
+                    endOfWeek.add(Calendar.DAY_OF_MONTH, 7 - dayOfWeek)
+                    val subDate = sdf.parse(subscription.startDate) ?: today
+                    subDate in startOfWeek.time..endOfWeek.time
+                }
+                "This Month" -> {
+                    val cal = Calendar.getInstance()
+                    val month = cal.get(Calendar.MONTH)
+                    val year = cal.get(Calendar.YEAR)
+                    val subDate = sdf.parse(subscription.startDate) ?: today
+                    val subCal = Calendar.getInstance()
+                    subCal.time = subDate
+                    subCal.get(Calendar.MONTH) == month && subCal.get(Calendar.YEAR) == year
+                }
+                else -> true
+            }
+
+            matchesFrequency && matchesSearch && matchesAmount && matchesDue
         }.toMutableList()
+
         notifyDataSetChanged()
     }
 
-    override fun getFilter(): Filter {
-        return object : Filter() {
-            override fun performFiltering(query: CharSequence?): FilterResults {
-                val q = query?.toString() ?: ""
-                applySearch(q)
-                return FilterResults().apply { values = filteredList }
+    override fun getFilter(): android.widget.Filter {
+        return object : android.widget.Filter() {
+            override fun performFiltering(query: CharSequence?): android.widget.Filter.FilterResults {
+                applySearch(query?.toString() ?: "")
+                return android.widget.Filter.FilterResults().apply { values = filteredList }
             }
 
-            override fun publishResults(query: CharSequence?, results: FilterResults?) {}
+            override fun publishResults(query: CharSequence?, results: android.widget.Filter.FilterResults?) {}
         }
     }
 
