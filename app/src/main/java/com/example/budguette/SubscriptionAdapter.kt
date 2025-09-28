@@ -19,6 +19,10 @@ class SubscriptionAdapter(
     private val originalList: MutableList<Subscription> = mutableListOf()
     private var filteredList: MutableList<Subscription> = mutableListOf()
 
+    // Current filters
+    private var searchQuery: String = ""
+    private var frequencyFilter: String = "All"
+
     inner class SubscriptionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val nameText: TextView = itemView.findViewById(R.id.subscriptionName)
         val costText: TextView = itemView.findViewById(R.id.subscriptionCost)
@@ -35,6 +39,7 @@ class SubscriptionAdapter(
 
     override fun onBindViewHolder(holder: SubscriptionViewHolder, position: Int) {
         val subscription = filteredList[position]
+
         holder.nameText.text = subscription.name
         holder.costText.text = "Cost: $${subscription.amount}"
         holder.frequencyText.text = "Frequency: ${subscription.frequency}"
@@ -42,7 +47,7 @@ class SubscriptionAdapter(
         holder.notesText.text = "Notes: ${subscription.notes}"
 
         holder.dueText.setOnClickListener {
-            showDatePickerDialog(holder.dueText.context, subscription) { selectedDate ->
+            showDatePickerDialog(holder.dueText.context) { selectedDate ->
                 holder.dueText.text = "Due: $selectedDate"
                 onDueDateSelected(subscription, selectedDate)
             }
@@ -61,39 +66,41 @@ class SubscriptionAdapter(
     fun setSubscriptions(newList: List<Subscription>) {
         originalList.clear()
         originalList.addAll(newList)
+        applyFilters()
+    }
 
-        filteredList.clear()
-        filteredList.addAll(newList)
+    fun applySearch(query: String) {
+        searchQuery = query
+        applyFilters()
+    }
 
+    fun applyFrequency(frequency: String) {
+        frequencyFilter = frequency
+        applyFilters()
+    }
+
+    private fun applyFilters() {
+        filteredList = originalList.filter { subscription ->
+            val matchesFrequency = (frequencyFilter == "All") || (subscription.frequency == frequencyFilter)
+            val matchesSearch = subscription.name.contains(searchQuery, ignoreCase = true)
+            matchesFrequency && matchesSearch
+        }.toMutableList()
         notifyDataSetChanged()
     }
 
     override fun getFilter(): Filter {
         return object : Filter() {
             override fun performFiltering(query: CharSequence?): FilterResults {
-                val resultList = if (query.isNullOrEmpty()) {
-                    originalList
-                } else {
-                    val lowerQuery = query.toString().lowercase(Locale.getDefault())
-                    originalList.filter {
-                        it.name.lowercase(Locale.getDefault()).contains(lowerQuery)
-                    }
-                }
-
-                val filterResults = FilterResults()
-                filterResults.values = resultList
-                return filterResults
+                val q = query?.toString() ?: ""
+                applySearch(q)
+                return FilterResults().apply { values = filteredList }
             }
 
-            @Suppress("UNCHECKED_CAST")
-            override fun publishResults(query: CharSequence?, results: FilterResults?) {
-                filteredList = (results?.values as? List<Subscription>)?.toMutableList() ?: mutableListOf()
-                notifyDataSetChanged()
-            }
+            override fun publishResults(query: CharSequence?, results: FilterResults?) {}
         }
     }
 
-    private fun showDatePickerDialog(context: Context, subscription: Subscription, onDateSelected: (String) -> Unit) {
+    private fun showDatePickerDialog(context: Context, onDateSelected: (String) -> Unit) {
         val calendar = Calendar.getInstance()
         val year = calendar.get(Calendar.YEAR)
         val month = calendar.get(Calendar.MONTH)
@@ -110,6 +117,8 @@ class SubscriptionAdapter(
         datePickerDialog.show()
     }
 }
+
+
 
 
 

@@ -3,8 +3,7 @@ package com.example.budguette
 import android.content.Intent
 import android.os.Bundle
 import android.view.*
-import android.widget.Toast
-import android.widget.SearchView
+import android.widget.*
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -18,9 +17,14 @@ class SubscriptionsFragment : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: SubscriptionAdapter
+    private lateinit var frequencySpinner: Spinner
+    private lateinit var searchView: SearchView
+
     private val auth by lazy { FirebaseAuth.getInstance() }
     private val db by lazy { FirebaseFirestore.getInstance() }
     private var listener: ListenerRegistration? = null
+
+    private val frequencies = listOf("All", "One-Time", "Daily", "Weekly", "Monthly", "Yearly")
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -28,30 +32,41 @@ class SubscriptionsFragment : Fragment() {
     ): View {
         val view = inflater.inflate(R.layout.fragment_subscriptions, container, false)
 
-        // Set up RecyclerView
         recyclerView = view.findViewById(R.id.subscriptionRecyclerView)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
         adapter = SubscriptionAdapter { subscription, newDate ->
             updateSubscriptionDate(subscription, newDate)
         }
-
         recyclerView.adapter = adapter
 
-        // Set up FAB to add new subscription
-        view.findViewById<FloatingActionButton>(R.id.addSubscriptionFab).setOnClickListener {
-            startActivity(Intent(requireContext(), AddSubscriptionActivity::class.java))
-        }
-
-        // Set up SearchView
-        val searchView = view.findViewById<SearchView>(R.id.subscription_search_view)
+        searchView = view.findViewById(R.id.subscription_search_view)
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean = false
+            override fun onQueryTextSubmit(query: String?) = false
             override fun onQueryTextChange(newText: String?): Boolean {
-                adapter.filter.filter(newText)
+                adapter.applySearch(newText ?: "")
                 return true
             }
         })
+
+        frequencySpinner = view.findViewById(R.id.frequencySpinner)
+        val spinnerAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, frequencies)
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        frequencySpinner.adapter = spinnerAdapter
+
+        frequencySpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                adapter.applyFrequency(frequencies[position])
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                adapter.applyFrequency("All")
+            }
+        }
+
+        view.findViewById<FloatingActionButton>(R.id.addSubscriptionFab).setOnClickListener {
+            startActivity(Intent(requireContext(), AddSubscriptionActivity::class.java))
+        }
 
         return view
     }
