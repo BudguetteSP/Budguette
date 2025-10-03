@@ -8,6 +8,7 @@ import android.content.pm.PackageManager
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import java.util.*
 
 class ReminderReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -18,7 +19,7 @@ class ReminderReceiver : BroadcastReceiver() {
 
         // ✅ Build notification
         val builder = NotificationCompat.Builder(context, "subscription_reminders")
-            .setSmallIcon(R.drawable.baseline_notifications_24) // make sure this exists
+            .setSmallIcon(R.drawable.baseline_notifications_24)
             .setContentTitle("Upcoming Subscription")
             .setContentText("$subName is due soon: $$subAmount")
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -33,29 +34,31 @@ class ReminderReceiver : BroadcastReceiver() {
             with(NotificationManagerCompat.from(context)) {
                 notify(System.currentTimeMillis().toInt(), builder.build())
             }
-        } else {
-            // Permission denied → do nothing (or log / fallback)
         }
 
-        // 🔄 Reschedule if recurring
+        // 🔄 Reschedule recurring alarms
         if (frequency != "One-Time" && nextDateMillis > 0) {
-            val cal = java.util.Calendar.getInstance().apply { timeInMillis = nextDateMillis }
+            val cal = Calendar.getInstance().apply { timeInMillis = nextDateMillis }
 
             when (frequency) {
-                "Daily" -> cal.add(java.util.Calendar.DAY_OF_YEAR, 1)
-                "Weekly" -> cal.add(java.util.Calendar.WEEK_OF_YEAR, 1)
-                "Monthly" -> cal.add(java.util.Calendar.MONTH, 1)
-                "Yearly" -> cal.add(java.util.Calendar.YEAR, 1)
+                "Daily" -> cal.add(Calendar.DAY_OF_YEAR, 1)
+                "Weekly" -> cal.add(Calendar.WEEK_OF_YEAR, 1)
+                "Monthly" -> cal.add(Calendar.MONTH, 1)
+                "Yearly" -> cal.add(Calendar.YEAR, 1)
             }
 
-            ReminderScheduler.scheduleReminder(
-                context,
-                subName,
-                subAmount,
-                frequency,
-                cal.timeInMillis
-            )
+            // Schedule next occurrence only if in the future
+            if (cal.timeInMillis > System.currentTimeMillis()) {
+                ReminderScheduler.scheduleReminder(
+                    context,
+                    subName,
+                    subAmount,
+                    frequency,
+                    cal.timeInMillis
+                )
+            }
         }
     }
 }
+
 

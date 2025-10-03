@@ -15,6 +15,11 @@ object ReminderScheduler {
         frequency: String,
         triggerAtMillis: Long
     ) {
+        if (triggerAtMillis <= System.currentTimeMillis()) {
+            // Don't schedule alarms in the past
+            return
+        }
+
         val intent = Intent(context, ReminderReceiver::class.java).apply {
             putExtra("subName", subName)
             putExtra("subAmount", subAmount)
@@ -22,9 +27,12 @@ object ReminderScheduler {
             putExtra("nextDate", triggerAtMillis)
         }
 
+        // Unique request code per subscription + date
+        val requestCode = (subName + triggerAtMillis).hashCode()
+
         val pendingIntent = PendingIntent.getBroadcast(
             context,
-            subName.hashCode(),
+            requestCode,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
@@ -32,15 +40,13 @@ object ReminderScheduler {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                if (!alarmManager.canScheduleExactAlarms()) {
-                    Toast.makeText(
-                        context,
-                        "Cannot schedule exact alarms. Enable in system settings.",
-                        Toast.LENGTH_LONG
-                    ).show()
-                    return
-                }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
+                Toast.makeText(
+                    context,
+                    "Cannot schedule exact alarms. Enable in system settings.",
+                    Toast.LENGTH_LONG
+                ).show()
+                return
             }
 
             alarmManager.setExact(
@@ -55,6 +61,22 @@ object ReminderScheduler {
                 "Failed to schedule reminder: ${e.message}",
                 Toast.LENGTH_LONG
             ).show()
+        }
+    }
+
+    fun cancelReminder(context: Context, subName: String, triggerAtMillis: Long) {
+        val intent = Intent(context, ReminderReceiver::class.java)
+        val requestCode = (subName + triggerAtMillis).hashCode()
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            requestCode,
+            intent,
+            PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
+        )
+        if (pendingIntent != null) {
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            alarmManager.cancel(pendingIntent)
+            pendingIntent.cancel()
         }
     }
 }
