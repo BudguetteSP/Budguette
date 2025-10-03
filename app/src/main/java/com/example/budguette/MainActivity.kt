@@ -1,8 +1,10 @@
 package com.example.budguette
 
-import android.app.AlertDialog
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.os.Build
 import android.os.Bundle
-import android.widget.ArrayAdapter
 import android.widget.ListView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
@@ -18,7 +20,10 @@ class MainActivity : AppCompatActivity() {
         AndroidThreeTen.init(this)
         setContentView(R.layout.activity_main)
 
+        createNotificationChannel()
+
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_navigation)
+
 
         bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
@@ -26,12 +31,11 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_expenses -> loadFragment(ExpensesFragment())
                 R.id.nav_subscriptions -> loadFragment(SubscriptionsFragment())
                 R.id.nav_calendar -> loadFragment(CalendarFragment())
-                R.id.nav_more -> showMoreMenu() // Custom dialog with Profile + Forums
+                R.id.nav_more -> showMoreMenu()
             }
             true
         }
 
-        // Load the default fragment
         if (savedInstanceState == null) {
             bottomNav.selectedItemId = R.id.nav_home
         }
@@ -68,8 +72,24 @@ class MainActivity : AppCompatActivity() {
         bottomSheetDialog.show()
     }
 
+    // 🔔 Create notification channel
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                "subscription_reminders",
+                "Subscription Reminders",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Alerts for upcoming subscriptions"
+            }
 
+            val notificationManager: NotificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
 
 
 }
+
 

@@ -35,14 +35,14 @@ class CalendarFragment : Fragment() {
     private val auth = FirebaseAuth.getInstance()
 
     private val subscriptionColors = mapOf(
-        "Daily" to 0xFF800080.toInt(),      // Purple
-        "Weekly" to 0xFF0000FF.toInt(),     // Blue
-        "Monthly" to 0xFFFF0000.toInt(),    // Red
-        "Yearly" to 0xFF00FF00.toInt(),     // Green
-        "One-Time" to 0xFFFFA500.toInt()    // Orange
+        "Daily" to 0xFF800080.toInt(),
+        "Weekly" to 0xFF0000FF.toInt(),
+        "Monthly" to 0xFFFF0000.toInt(),
+        "Yearly" to 0xFF00FF00.toInt(),
+        "One-Time" to 0xFFFFA500.toInt()
     )
-    private val expenseColor = 0xFFFF0000.toInt() // Red
-    private val depositColor = 0xFF00FF00.toInt() // Green
+    private val expenseColor = 0xFFFF0000.toInt()
+    private val depositColor = 0xFF00FF00.toInt()
 
     private var allSubscriptions: List<Subscription> = emptyList()
     private var allTransactions: List<Transaction> = emptyList()
@@ -63,7 +63,6 @@ class CalendarFragment : Fragment() {
         tabLayout = view.findViewById(R.id.tabLayout)
         val legendIcon: ImageView = view.findViewById(R.id.legendIcon)
 
-        // Tabs
         tabLayout.addTab(tabLayout.newTab().setText("Subscriptions"))
         tabLayout.addTab(tabLayout.newTab().setText("Expenses"))
         tabLayout.addTab(tabLayout.newTab().setText("Deposits"))
@@ -124,6 +123,9 @@ class CalendarFragment : Fragment() {
                     )
                 }
                 decorateCalendarForTab()
+
+                // 🔔 Schedule reminders
+                allSubscriptions.forEach { scheduleReminder(it) }
             }
     }
 
@@ -151,7 +153,6 @@ class CalendarFragment : Fragment() {
                 summaryText.text = "Failed to fetch transactions: ${e.message}"
             }
     }
-
 
     private fun decorateCalendarForTab() {
         calendarView.removeDecorators()
@@ -184,7 +185,6 @@ class CalendarFragment : Fragment() {
             }
         }
 
-        // Click dialog
         calendarView.setOnDateChangedListener { _, date, _ ->
             val clickedDate = sdf.format(date.date)
             val subsForDay = subsByDate[clickedDate]
@@ -200,7 +200,6 @@ class CalendarFragment : Fragment() {
             }
         }
 
-        // Summary vertical
         val totals = filteredSubs.groupBy { it.frequency }
             .mapValues { entry -> entry.value.sumOf { it.amount } }
         summaryText.text = """
@@ -235,7 +234,6 @@ class CalendarFragment : Fragment() {
             }
         }
 
-        // Click dialog
         calendarView.setOnDateChangedListener { _, date, _ ->
             val clickedDate = sdf.format(date.date)
             val txnsForDay = txnsByDate[clickedDate]
@@ -251,7 +249,6 @@ class CalendarFragment : Fragment() {
             }
         }
 
-        // Summary
         val total = filteredTxns.sumOf { it.cost }
         val label = if (type.equals("Expense", true)) "Expenses" else "Deposits"
         summaryText.text = "$label Total: $${"%.2f".format(total)}"
@@ -285,5 +282,23 @@ class CalendarFragment : Fragment() {
             .setPositiveButton("OK", null)
             .show()
     }
+
+    // 🔔 Schedule subscription reminders
+    private fun scheduleReminder(subscription: Subscription) {
+        val subDate = sdf.parse(subscription.startDate) ?: return
+        val cal = Calendar.getInstance().apply {
+            time = subDate
+            add(Calendar.DAY_OF_YEAR, -1) // remind 1 day before
+        }
+
+        ReminderScheduler.scheduleReminder(
+            requireContext(),
+            subscription.name,
+            subscription.amount,
+            subscription.frequency,
+            cal.timeInMillis
+        )
+    }
 }
+
 
