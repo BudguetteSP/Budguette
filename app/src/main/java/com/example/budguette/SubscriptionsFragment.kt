@@ -95,19 +95,19 @@ class SubscriptionsFragment : Fragment() {
 
     private fun setupSpinners() {
         // Frequency Spinner
-        val freqOptions = listOf("All Frequencies", "One-Time", "Daily", "Weekly", "Monthly", "Yearly")
+        val freqOptions = listOf("All", "One-Time", "Daily", "Weekly", "Monthly", "Yearly")
         frequencySpinner.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, freqOptions).apply {
             setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         }
 
         // Amount Spinner
-        val amountOptions = listOf("All Amounts", "Under $10", "$10 - $50", "$50 - $100", "Over $100")
+        val amountOptions = listOf("All", "Under $10", "$10 - $50", "$50 - $100", "Over $100")
         amountSpinner.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, amountOptions).apply {
             setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         }
 
         // Due Spinner
-        val dueOptions = listOf("All Due Dates", "Due This Week", "Due This Month", "Due Next Month")
+        val dueOptions = listOf("All", "Due This Week", "Due This Month", "Due Next Month")
         dueSpinner.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, dueOptions).apply {
             setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         }
@@ -134,7 +134,7 @@ class SubscriptionsFragment : Fragment() {
 
         // Frequency filter
         val freqSelected = frequencySpinner.selectedItem as String
-        if (freqSelected != "All Frequencies") {
+        if (freqSelected != "All") {
             filtered = filtered.filter { it.frequency == freqSelected }
         }
 

@@ -61,6 +61,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:entries="@array/type_options"
+                android:spinnerMode="dialog"
                 android:layout_marginEnd="8dp" />
 
             <Spinner
@@ -68,7 +69,9 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:entries="@array/category_options" />
+                android:entries="@array/category_options"
+                android:spinnerMode="dialog" />
+
         </LinearLayout>
 
         <!-- Row 2: Pick Date Button -->

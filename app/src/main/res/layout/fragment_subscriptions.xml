@@ -47,28 +47,69 @@
         android:weightSum="3">
 
         <!-- Frequency Filter -->
-        <Spinner
-            android:id="@+id/frequencySpinner"
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:spinnerMode="dropdown"/>
+            android:orientation="vertical"
+            android:paddingEnd="4dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Frequency"
+                android:textSize="14sp"
+                android:textColor="@color/black"/>
+
+            <Spinner
+                android:id="@+id/frequencySpinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:spinnerMode="dialog"/>
+        </LinearLayout>
 
         <!-- Amount Filter -->
-        <Spinner
-            android:id="@+id/amountSpinner"
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:spinnerMode="dropdown"/>
+            android:orientation="vertical"
+            android:paddingEnd="4dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Amount"
+                android:textSize="14sp"
+                android:textColor="@color/black"/>
+
+            <Spinner
+                android:id="@+id/amountSpinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:spinnerMode="dialog"/>
+        </LinearLayout>
 
         <!-- Due Filter -->
-        <Spinner
-            android:id="@+id/dueSpinner"
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:spinnerMode="dropdown"/>
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Due"
+                android:textSize="14sp"
+                android:textColor="@color/black"/>
+
+            <Spinner
+                android:id="@+id/dueSpinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:spinnerMode="dialog"/>
+        </LinearLayout>
     </LinearLayout>
 
     <!-- RecyclerView -->
@@ -95,6 +136,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 </androidx.constraintlayout.widget.ConstraintLayout>
+
 
 
 
