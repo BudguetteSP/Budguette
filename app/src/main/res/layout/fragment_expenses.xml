@@ -44,7 +44,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Row 1: Type and Category Spinners -->
+        <!-- Row 1: Type and Category Spinners with labels -->
         <LinearLayout
             android:id="@+id/filterRow1"
             android:layout_width="0dp"
@@ -53,24 +53,53 @@
             android:gravity="center"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
+            app:layout_constraintEnd_toEndOf="parent"
+            android:weightSum="2">
 
-            <Spinner
-                android:id="@+id/spinnerType"
+            <!-- Type Filter -->
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:entries="@array/type_options"
-                android:spinnerMode="dialog"
-                android:layout_marginEnd="8dp" />
+                android:orientation="vertical"
+                android:paddingEnd="8dp">
 
-            <Spinner
-                android:id="@+id/spinnerCategory"
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Type"
+                    android:textSize="14sp"
+                    android:textColor="@color/black" />
+
+                <Spinner
+                    android:id="@+id/spinnerType"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:spinnerMode="dialog"
+                    android:entries="@array/type_options"/>
+            </LinearLayout>
+
+            <!-- Category Filter -->
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:entries="@array/category_options"
-                android:spinnerMode="dialog" />
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Category"
+                    android:textSize="14sp"
+                    android:textColor="@color/black" />
+
+                <Spinner
+                    android:id="@+id/spinnerCategory"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:spinnerMode="dialog"
+                    android:entries="@array/category_options"/>
+            </LinearLayout>
 
         </LinearLayout>
 
@@ -87,18 +116,37 @@
             android:layout_marginTop="8dp" />
 
         <!-- Row 3: Price RangeSlider -->
-        <com.google.android.material.slider.RangeSlider
-            android:id="@+id/sliderPrice"
+        <!-- Row 3: Price RangeSlider -->
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:valueFrom="0"
-            android:valueTo="1000"
-            android:stepSize="10"
-            app:thumbColor="@color/gold"
+            android:orientation="vertical"
             app:layout_constraintTop_toBottomOf="@id/buttonDateFilter"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="8dp"/>
+            android:layout_marginTop="8dp">
+
+            <!-- Label for slider -->
+            <TextView
+                android:id="@+id/priceSliderLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Price Range ($)"
+                android:textSize="14sp"
+                android:textColor="@color/black"
+                android:layout_marginBottom="4dp"/>
+
+            <!-- Slider -->
+            <com.google.android.material.slider.RangeSlider
+                android:id="@+id/sliderPrice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:valueFrom="0"
+                android:valueTo="1000"
+                android:stepSize="10"
+                app:thumbColor="@color/gold"/>
+        </LinearLayout>
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- RecyclerView -->
