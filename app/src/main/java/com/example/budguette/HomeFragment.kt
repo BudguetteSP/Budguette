@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.data.PieData
@@ -358,49 +359,105 @@ class HomeFragment : Fragment() {
         val userRef = db.collection("users").document(userId)
 
         userRef.get().addOnSuccessListener { doc ->
+            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val today = sdf.format(Date())
+
             val lastLogin = doc.getString("lastLoginDate")
             val streak = doc.getLong("loginStreak") ?: 0L
-            val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+
+            // Prevent multiple popups in one day
+            val prefs = requireContext().getSharedPreferences("streak", 0)
+            val lastPopupShown = prefs.getString("lastPopupShown", "")
+            if (today == lastPopupShown) return@addOnSuccessListener
 
             if (lastLogin != today) {
-                // Determine new streak
-                val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                // Check if yesterday was last login
                 val cal = Calendar.getInstance()
                 cal.add(Calendar.DATE, -1)
                 val yesterday = sdf.format(cal.time)
 
                 val newStreak = if (lastLogin == yesterday) streak + 1 else 1
 
-                // Save back to Firestore
-                userRef.update(mapOf(
-                    "lastLoginDate" to today,
-                    "loginStreak" to newStreak
-                ))
+                // Update Firestore with new streak
+                userRef.update(
+                    mapOf(
+                        "lastLoginDate" to today,
+                        "loginStreak" to newStreak
+                    )
+                ).addOnSuccessListener {
+                    // Save highest streak if applicable
+                    val highest = doc.getLong("highestStreak") ?: 0L
+                    if (newStreak > highest) {
+                        userRef.update("highestStreak", newStreak)
+                    }
 
-                // Show popup
-                showStreakPopup(newStreak)
+                    // Show popup with streak and tip
+                    showStreakPopup(newStreak)
+
+                    // Save today's popup flag
+                    prefs.edit().putString("lastPopupShown", today).apply()
+                }
             }
         }
     }
 
+    // 🔹 Displays streak + tip popup
     private fun showStreakPopup(streak: Long) {
         val dialogView = layoutInflater.inflate(R.layout.dialog_streak_popup, null)
         val streakText = dialogView.findViewById<TextView>(R.id.streakText)
+        val tipText = dialogView.findViewById<TextView>(R.id.tipText)
+        val addTipButton = dialogView.findViewById<Button>(R.id.addTipButton)
         val closeButton = dialogView.findViewById<ImageButton>(R.id.closeButton)
 
-        streakText.text = "🔥 Login Streak: $streak day${if (streak != 1L) "s" else ""}!"
+        val randomTip = financialTips.random()
 
-        val dialog = android.app.AlertDialog.Builder(requireContext())
+        streakText.text = "🔥 Login Streak: $streak day${if (streak != 1L) "s" else ""}!"
+        tipText.text = "💡 Tip of the Day:\n$randomTip"
+
+        val dialog = AlertDialog.Builder(requireContext())
             .setView(dialogView)
             .create()
 
-        closeButton.setOnClickListener {
+        addTipButton.setOnClickListener {
+            saveTipToProfile(randomTip)
+            Toast.makeText(requireContext(), "Tip added to your profile!", Toast.LENGTH_SHORT).show()
             dialog.dismiss()
         }
+
+        closeButton.setOnClickListener { dialog.dismiss() }
 
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
         dialog.show()
     }
+
+    // 🔹 Saves selected tip to Firestore
+    private fun saveTipToProfile(tip: String) {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val db = FirebaseFirestore.getInstance()
+        val tipsRef = db.collection("users").document(userId).collection("tips")
+
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        val tipData = hashMapOf(
+            "text" to tip,
+            "date" to today
+        )
+
+        tipsRef.add(tipData)
+    }
+
+
+
+    private val financialTips = listOf(
+        "Track every expense, no matter how small.",
+        "Set aside 10% of every paycheck before spending.",
+        "Avoid impulse buys — wait 24 hours before making nonessential purchases.",
+        "Review subscriptions monthly and cancel unused ones.",
+        "Invest early — compound interest rewards consistency.",
+        "Create a budget and stick to it for 30 days.",
+        "Automate bill payments to avoid late fees.",
+        "Use the 50/30/20 rule: Needs, Wants, Savings."
+    )
+
 
 
 

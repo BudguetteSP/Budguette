@@ -1,28 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="300dp"
+    android:layout_width="320dp"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="@color/light_grey"
+    android:background="@drawable/popup_background"
     android:padding="20dp"
     android:gravity="center">
-
-    <ImageView
-        android:id="@+id/fireIcon"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
-        android:src="@drawable/ic_fire_foreground"
-        android:contentDescription="Fire Icon" />
-
-    <TextView
-        android:id="@+id/streakText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="🔥 Login Streak: 3 days!"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:textColor="@android:color/black"
-        android:layout_marginTop="10dp" />
 
     <ImageButton
         android:id="@+id/closeButton"
@@ -32,4 +15,39 @@
         android:background="@android:color/transparent"
         android:src="@drawable/ic_close_foreground"
         android:contentDescription="Close" />
+
+    <ImageView
+        android:id="@+id/fireIcon"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:src="@drawable/ic_fire_foreground"
+        android:layout_marginBottom="10dp" />
+
+    <TextView
+        android:id="@+id/streakText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="🔥 Login Streak: 3 days!"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/black"
+        android:layout_marginBottom="10dp" />
+
+    <TextView
+        android:id="@+id/tipText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Tip of the Day: Track your spending!"
+        android:textSize="16sp"
+        android:textColor="@android:color/black"
+        android:layout_marginBottom="20dp" />
+
+    <Button
+        android:id="@+id/addTipButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Add to My Tips"
+        android:backgroundTint="@color/gold"
+        android:textColor="@android:color/white" />
+
 </LinearLayout>

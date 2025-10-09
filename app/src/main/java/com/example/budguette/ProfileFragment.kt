@@ -6,16 +6,16 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import android.view.*
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import com.bumptech.glide.Glide
-import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.google.android.material.tabs.TabLayout
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -25,7 +25,8 @@ class ProfileFragment : Fragment() {
 
     private lateinit var postsRecyclerView: RecyclerView
     private lateinit var postAdapter: PostAdapter
-    private val postsList = mutableListOf<Post>()
+    private lateinit var tipsRecyclerView: RecyclerView
+    private lateinit var tipAdapter: TipAdapter
 
     private lateinit var profileImage: ImageView
     private lateinit var nameText: TextView
@@ -35,6 +36,7 @@ class ProfileFragment : Fragment() {
     private lateinit var changePictureBtn: Button
     private lateinit var logoutBtn: Button
     private lateinit var editProfileBtn: Button
+    private lateinit var tabLayout: TabLayout
 
     private val auth = FirebaseAuth.getInstance()
     private val db = FirebaseFirestore.getInstance()
@@ -57,21 +59,50 @@ class ProfileFragment : Fragment() {
         changePictureBtn = view.findViewById(R.id.change_picture_btn)
         logoutBtn = view.findViewById(R.id.logout_button)
         editProfileBtn = view.findViewById(R.id.edit_profile_btn)
+        tabLayout = view.findViewById(R.id.profile_tab_layout)
 
-        checkAndRequestPermissions()
-        loadUserInfo()
+        // Initialize tab layout
+        tabLayout.addTab(tabLayout.newTab().setText("My Posts"))
+        tabLayout.addTab(tabLayout.newTab().setText("My Tips"))
 
-        changePictureBtn.setOnClickListener { pickImage.launch("image/*") }
-        logoutBtn.setOnClickListener { showLogoutConfirmation() }
-        editProfileBtn.setOnClickListener { showEditProfileDialog() }
-        // Initialize RecyclerView for user posts
+        // Initialize RecyclerViews
         postsRecyclerView = view.findViewById(R.id.user_posts_recycler)
         postAdapter = PostAdapter()
         postsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         postsRecyclerView.adapter = postAdapter
 
-        loadUserPosts()
+        tipsRecyclerView = view.findViewById(R.id.user_tips_recycler)
+        tipAdapter = TipAdapter()
+        tipsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        tipsRecyclerView.adapter = tipAdapter
 
+        checkAndRequestPermissions()
+        loadUserInfo()
+        loadUserPosts()
+        loadUserTips()
+
+        // Tab switching behavior
+        tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+            override fun onTabSelected(tab: TabLayout.Tab) {
+                when (tab.position) {
+                    0 -> {
+                        postsRecyclerView.visibility = View.VISIBLE
+                        tipsRecyclerView.visibility = View.GONE
+                    }
+                    1 -> {
+                        postsRecyclerView.visibility = View.GONE
+                        tipsRecyclerView.visibility = View.VISIBLE
+                    }
+                }
+            }
+
+            override fun onTabUnselected(tab: TabLayout.Tab) {}
+            override fun onTabReselected(tab: TabLayout.Tab) {}
+        })
+
+        changePictureBtn.setOnClickListener { pickImage.launch("image/*") }
+        logoutBtn.setOnClickListener { showLogoutConfirmation() }
+        editProfileBtn.setOnClickListener { showEditProfileDialog() }
 
         return view
     }
@@ -92,7 +123,6 @@ class ProfileFragment : Fragment() {
                     emailText.text = document.getString("email") ?: auth.currentUser?.email
                     dobText.text = document.getString("dob") ?: "N/A"
                     bioText.text = document.getString("bio") ?: ""
-
                     loadProfileImage(document.getString("profileImageUrl"))
                 }
             }
@@ -126,6 +156,28 @@ class ProfileFragment : Fragment() {
             }
     }
 
+    private fun loadUserTips() {
+        val userId = auth.currentUser?.uid ?: return
+
+        db.collection("tips")
+            .whereEqualTo("userId", userId)
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                val tips = querySnapshot.documents.map { doc ->
+                    Tip(
+                        id = doc.id,
+                        userId = userId,
+                        title = doc.getString("title") ?: "",
+                        content = doc.getString("content") ?: "",
+                        timestamp = doc.getLong("timestamp") ?: System.currentTimeMillis()
+                    )
+                }
+                tipAdapter.submitList(tips)
+            }
+            .addOnFailureListener {
+                Toast.makeText(context, "Failed to load your tips", Toast.LENGTH_SHORT).show()
+            }
+    }
 
     private fun loadProfileImage(url: String?) {
         if (!isAdded) return
@@ -134,7 +186,6 @@ class ProfileFragment : Fragment() {
             .placeholder(R.drawable.ic_defaultprofile_background)
             .into(profileImage)
     }
-
 
     private fun uploadImageToFirebaseStorage(imageUri: Uri) {
         val userId = auth.currentUser?.uid ?: return
@@ -245,6 +296,7 @@ class ProfileFragment : Fragment() {
         builder.show()
     }
 }
+
 
 
 
