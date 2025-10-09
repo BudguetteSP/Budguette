@@ -1,7 +1,10 @@
 package com.example.budguette
 
+import android.Manifest
 import android.app.AlertDialog
 import android.app.DatePickerDialog
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
@@ -12,6 +15,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.google.android.material.tabs.TabLayout
 import com.google.firebase.auth.FirebaseAuth
@@ -124,8 +128,15 @@ class CalendarFragment : Fragment() {
                 }
                 decorateCalendarForTab()
 
-                // 🔔 Schedule reminders
-                allSubscriptions.forEach { scheduleReminder(it) }
+                // 🔔 Schedule reminders for all subscriptions
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+                    ContextCompat.checkSelfPermission(
+                        requireContext(),
+                        Manifest.permission.POST_NOTIFICATIONS
+                    ) == PackageManager.PERMISSION_GRANTED
+                ) {
+                    allSubscriptions.forEach { scheduleReminder(it) }
+                }
             }
     }
 
@@ -288,7 +299,7 @@ class CalendarFragment : Fragment() {
         val subDate = sdf.parse(subscription.startDate) ?: return
         val cal = Calendar.getInstance().apply {
             time = subDate
-            add(Calendar.DAY_OF_YEAR, -1) // remind 1 day before
+            add(Calendar.DAY_OF_YEAR, -1) // notify 1 day before
         }
 
         ReminderScheduler.scheduleReminder(

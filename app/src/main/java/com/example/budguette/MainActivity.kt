@@ -2,7 +2,6 @@ package com.example.budguette
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.widget.ListView
@@ -23,8 +22,6 @@ class MainActivity : AppCompatActivity() {
         createNotificationChannel()
 
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_navigation)
-
-
         bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_home -> loadFragment(HomeFragment())
@@ -52,7 +49,6 @@ class MainActivity : AppCompatActivity() {
             "Profile" to R.drawable.ic_profile,
             "Forums" to R.drawable.ic_forums
         )
-
         val bottomSheetDialog = com.google.android.material.bottomsheet.BottomSheetDialog(this)
         val view = layoutInflater.inflate(R.layout.bottom_sheet_more, null)
         val listView = view.findViewById<ListView>(R.id.moreListView)
@@ -72,7 +68,6 @@ class MainActivity : AppCompatActivity() {
         bottomSheetDialog.show()
     }
 
-    // 🔔 Create notification channel
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
@@ -84,12 +79,9 @@ class MainActivity : AppCompatActivity() {
             }
 
             val notificationManager: NotificationManager =
-                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                getSystemService(NotificationManager::class.java)
             notificationManager.createNotificationChannel(channel)
         }
     }
-
-
 }
-
 

@@ -17,7 +17,12 @@ class ReminderReceiver : BroadcastReceiver() {
         val frequency = intent.getStringExtra("frequency") ?: "One-Time"
         val nextDateMillis = intent.getLongExtra("nextDate", 0L)
 
-        // ✅ Build notification
+        if (ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) return
+
         val builder = NotificationCompat.Builder(context, "subscription_reminders")
             .setSmallIcon(R.drawable.baseline_notifications_24)
             .setContentTitle("Upcoming Subscription")
@@ -25,40 +30,26 @@ class ReminderReceiver : BroadcastReceiver() {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
 
-        // ✅ Check permission before posting
-        if (ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.POST_NOTIFICATIONS
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            with(NotificationManagerCompat.from(context)) {
-                notify(System.currentTimeMillis().toInt(), builder.build())
-            }
-        }
+        NotificationManagerCompat.from(context)
+            .notify(System.currentTimeMillis().toInt(), builder.build())
 
-        // 🔄 Reschedule recurring alarms
+        // 🔄 Reschedule recurring subscriptions
         if (frequency != "One-Time" && nextDateMillis > 0) {
             val cal = Calendar.getInstance().apply { timeInMillis = nextDateMillis }
-
             when (frequency) {
                 "Daily" -> cal.add(Calendar.DAY_OF_YEAR, 1)
                 "Weekly" -> cal.add(Calendar.WEEK_OF_YEAR, 1)
                 "Monthly" -> cal.add(Calendar.MONTH, 1)
                 "Yearly" -> cal.add(Calendar.YEAR, 1)
             }
-
-            // Schedule next occurrence only if in the future
             if (cal.timeInMillis > System.currentTimeMillis()) {
                 ReminderScheduler.scheduleReminder(
-                    context,
-                    subName,
-                    subAmount,
-                    frequency,
-                    cal.timeInMillis
+                    context, subName, subAmount, frequency, cal.timeInMillis
                 )
             }
         }
     }
 }
+
 
 

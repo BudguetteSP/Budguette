@@ -15,10 +15,7 @@ object ReminderScheduler {
         frequency: String,
         triggerAtMillis: Long
     ) {
-        if (triggerAtMillis <= System.currentTimeMillis()) {
-            // Don't schedule alarms in the past
-            return
-        }
+        if (triggerAtMillis <= System.currentTimeMillis()) return
 
         val intent = Intent(context, ReminderReceiver::class.java).apply {
             putExtra("subName", subName)
@@ -27,7 +24,6 @@ object ReminderScheduler {
             putExtra("nextDate", triggerAtMillis)
         }
 
-        // Unique request code per subscription + date
         val requestCode = (subName + triggerAtMillis).hashCode()
 
         val pendingIntent = PendingIntent.getBroadcast(
@@ -38,7 +34,6 @@ object ReminderScheduler {
         )
 
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
                 Toast.makeText(

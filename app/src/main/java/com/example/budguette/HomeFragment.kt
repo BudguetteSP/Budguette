@@ -67,6 +67,7 @@ class HomeFragment : Fragment() {
         loadMonthlyBudget()
         loadExpenseSummary()
         loadSubscriptionSummary()
+        checkLoginStreak()
 
         return view
     }
@@ -350,6 +351,58 @@ class HomeFragment : Fragment() {
         pieChart.animateY(1000)
         pieChart.invalidate()
     }
+
+    private fun checkLoginStreak() {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val db = FirebaseFirestore.getInstance()
+        val userRef = db.collection("users").document(userId)
+
+        userRef.get().addOnSuccessListener { doc ->
+            val lastLogin = doc.getString("lastLoginDate")
+            val streak = doc.getLong("loginStreak") ?: 0L
+            val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+
+            if (lastLogin != today) {
+                // Determine new streak
+                val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                val cal = Calendar.getInstance()
+                cal.add(Calendar.DATE, -1)
+                val yesterday = sdf.format(cal.time)
+
+                val newStreak = if (lastLogin == yesterday) streak + 1 else 1
+
+                // Save back to Firestore
+                userRef.update(mapOf(
+                    "lastLoginDate" to today,
+                    "loginStreak" to newStreak
+                ))
+
+                // Show popup
+                showStreakPopup(newStreak)
+            }
+        }
+    }
+
+    private fun showStreakPopup(streak: Long) {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_streak_popup, null)
+        val streakText = dialogView.findViewById<TextView>(R.id.streakText)
+        val closeButton = dialogView.findViewById<ImageButton>(R.id.closeButton)
+
+        streakText.text = "🔥 Login Streak: $streak day${if (streak != 1L) "s" else ""}!"
+
+        val dialog = android.app.AlertDialog.Builder(requireContext())
+            .setView(dialogView)
+            .create()
+
+        closeButton.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        dialog.show()
+    }
+
+
 
 }
 
