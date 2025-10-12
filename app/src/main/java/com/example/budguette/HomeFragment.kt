@@ -1,6 +1,7 @@
 package com.example.budguette
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -357,51 +358,33 @@ class HomeFragment : Fragment() {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
         val db = FirebaseFirestore.getInstance()
         val userRef = db.collection("users").document(userId)
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val today = sdf.format(Date())
 
+        // Always show popup for testing
         userRef.get().addOnSuccessListener { doc ->
-            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            val today = sdf.format(Date())
+            val streak = (doc.getLong("loginStreak") ?: 0L) + 1
 
-            val lastLogin = doc.getString("lastLoginDate")
-            val streak = doc.getLong("loginStreak") ?: 0L
-
-            // Prevent multiple popups in one day
-            val prefs = requireContext().getSharedPreferences("streak", 0)
-            val lastPopupShown = prefs.getString("lastPopupShown", "")
-            if (today == lastPopupShown) return@addOnSuccessListener
-
-            if (lastLogin != today) {
-                // Check if yesterday was last login
-                val cal = Calendar.getInstance()
-                cal.add(Calendar.DATE, -1)
-                val yesterday = sdf.format(cal.time)
-
-                val newStreak = if (lastLogin == yesterday) streak + 1 else 1
-
-                // Update Firestore with new streak
-                userRef.update(
-                    mapOf(
-                        "lastLoginDate" to today,
-                        "loginStreak" to newStreak
-                    )
-                ).addOnSuccessListener {
-                    // Save highest streak if applicable
-                    val highest = doc.getLong("highestStreak") ?: 0L
-                    if (newStreak > highest) {
-                        userRef.update("highestStreak", newStreak)
-                    }
-
-                    // Show popup with streak and tip
-                    showStreakPopup(newStreak)
-
-                    // Save today's popup flag
-                    prefs.edit().putString("lastPopupShown", today).apply()
-                }
+            // Ensure user document exists for Firestore writes
+            if (!doc.exists()) {
+                userRef.set(mapOf("createdAt" to System.currentTimeMillis()))
             }
+
+            // Update streak in Firestore (optional for testing)
+            userRef.update(
+                mapOf(
+                    "lastLoginDate" to today,
+                    "loginStreak" to streak
+                )
+            ).addOnFailureListener {
+                // Ignore failures in testing
+            }
+
+            showStreakPopup(streak)
         }
     }
 
-    // 🔹 Displays streak + tip popup
+    // 🔹 Testing-friendly popup: always shows and allows multiple adds
     private fun showStreakPopup(streak: Long) {
         val dialogView = layoutInflater.inflate(R.layout.dialog_streak_popup, null)
         val streakText = dialogView.findViewById<TextView>(R.id.streakText)
@@ -410,7 +393,6 @@ class HomeFragment : Fragment() {
         val closeButton = dialogView.findViewById<ImageButton>(R.id.closeButton)
 
         val randomTip = financialTips.random()
-
         streakText.text = "🔥 Login Streak: $streak day${if (streak != 1L) "s" else ""}!"
         tipText.text = "💡 Tip of the Day:\n$randomTip"
 
@@ -420,8 +402,8 @@ class HomeFragment : Fragment() {
 
         addTipButton.setOnClickListener {
             saveTipToProfile(randomTip)
-            Toast.makeText(requireContext(), "Tip added to your profile!", Toast.LENGTH_SHORT).show()
-            dialog.dismiss()
+            Toast.makeText(requireContext(), "Tip added (or attempted)!", Toast.LENGTH_SHORT).show()
+            // Do not dismiss dialog, so you can add multiple times for testing
         }
 
         closeButton.setOnClickListener { dialog.dismiss() }
@@ -430,20 +412,40 @@ class HomeFragment : Fragment() {
         dialog.show()
     }
 
-    // 🔹 Saves selected tip to Firestore
-    private fun saveTipToProfile(tip: String) {
+    // 🔹 Firestore write: ensures parent exists, ignores failures for testing
+    private fun saveTipToProfile(tipContent: String) {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
         val db = FirebaseFirestore.getInstance()
-        val tipsRef = db.collection("users").document(userId).collection("tips")
+        val userRef = db.collection("users").document(userId)
+        val tipsRef = userRef.collection("tips")
 
-        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-        val tipData = hashMapOf(
-            "text" to tip,
-            "date" to today
-        )
+        // Ensure user document exists
+        userRef.get().addOnSuccessListener { doc ->
+            if (!doc.exists()) {
+                userRef.set(mapOf("createdAt" to System.currentTimeMillis()))
+            }
 
-        tipsRef.add(tipData)
+            val tipData = hashMapOf(
+                "userId" to userId,
+                "title" to "Tip of the Day",
+                "content" to tipContent,
+                "timestamp" to System.currentTimeMillis()
+            )
+
+            tipsRef.add(tipData)
+                .addOnSuccessListener {
+                    Toast.makeText(requireContext(), "Tip added!", Toast.LENGTH_SHORT).show()
+                    (parentFragment as? ProfileFragment)?.loadUserTips()
+                }
+                .addOnFailureListener { e ->
+                    Log.e("FirestoreError", "Failed to add tip", e)
+                    Toast.makeText(requireContext(), "Tip not saved, but still testing!", Toast.LENGTH_SHORT).show()
+                }
+        }
     }
+
+
+
 
 
 

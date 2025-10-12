@@ -156,20 +156,21 @@ class ProfileFragment : Fragment() {
             }
     }
 
-    private fun loadUserTips() {
+    fun loadUserTips() {
         val userId = auth.currentUser?.uid ?: return
 
-        db.collection("tips")
-            .whereEqualTo("userId", userId)
+        db.collection("users").document(userId)
+            .collection("tips")
+            .orderBy("timestamp")
             .get()
             .addOnSuccessListener { querySnapshot ->
                 val tips = querySnapshot.documents.map { doc ->
                     Tip(
                         id = doc.id,
-                        userId = userId,
+                        userId = doc.getString("userId") ?: "",
                         title = doc.getString("title") ?: "",
                         content = doc.getString("content") ?: "",
-                        timestamp = doc.getLong("timestamp") ?: System.currentTimeMillis()
+                        timestamp = doc.getLong("timestamp") ?: 0L
                     )
                 }
                 tipAdapter.submitList(tips)
@@ -178,6 +179,8 @@ class ProfileFragment : Fragment() {
                 Toast.makeText(context, "Failed to load your tips", Toast.LENGTH_SHORT).show()
             }
     }
+
+
 
     private fun loadProfileImage(url: String?) {
         if (!isAdded) return
