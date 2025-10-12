@@ -361,30 +361,33 @@ class HomeFragment : Fragment() {
         val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         val today = sdf.format(Date())
 
-        // Always show popup for testing
         userRef.get().addOnSuccessListener { doc ->
+            val lastLogin = doc.getString("lastLoginDate")
             val streak = (doc.getLong("loginStreak") ?: 0L) + 1
 
-            // Ensure user document exists for Firestore writes
+            // Ensure user document exists
             if (!doc.exists()) {
                 userRef.set(mapOf("createdAt" to System.currentTimeMillis()))
             }
 
-            // Update streak in Firestore (optional for testing)
+            // Update streak and last login
             userRef.update(
                 mapOf(
                     "lastLoginDate" to today,
                     "loginStreak" to streak
                 )
             ).addOnFailureListener {
-                // Ignore failures in testing
+                // Ignore failures for now
             }
 
-            showStreakPopup(streak)
+            // Only show popup if lastLogin is null or different from today
+            if (lastLogin != today) {
+                showStreakPopup(streak)
+            }
         }
     }
 
-    // 🔹 Testing-friendly popup: always shows and allows multiple adds
+
     private fun showStreakPopup(streak: Long) {
         val dialogView = layoutInflater.inflate(R.layout.dialog_streak_popup, null)
         val streakText = dialogView.findViewById<TextView>(R.id.streakText)
@@ -402,8 +405,8 @@ class HomeFragment : Fragment() {
 
         addTipButton.setOnClickListener {
             saveTipToProfile(randomTip)
-            Toast.makeText(requireContext(), "Tip added (or attempted)!", Toast.LENGTH_SHORT).show()
-            // Do not dismiss dialog, so you can add multiple times for testing
+            Toast.makeText(requireContext(), "Tip added!", Toast.LENGTH_SHORT).show()
+            dialog.dismiss() // dismiss after adding
         }
 
         closeButton.setOnClickListener { dialog.dismiss() }
@@ -412,7 +415,6 @@ class HomeFragment : Fragment() {
         dialog.show()
     }
 
-    // 🔹 Firestore write: ensures parent exists, ignores failures for testing
     private fun saveTipToProfile(tipContent: String) {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
         val db = FirebaseFirestore.getInstance()
