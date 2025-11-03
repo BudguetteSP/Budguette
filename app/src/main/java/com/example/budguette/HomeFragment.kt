@@ -363,29 +363,53 @@ class HomeFragment : Fragment() {
 
         userRef.get().addOnSuccessListener { doc ->
             val lastLogin = doc.getString("lastLoginDate")
-            val streak = (doc.getLong("loginStreak") ?: 0L) + 1
+            var currentStreak = doc.getLong("loginStreak") ?: 0L
 
             // Ensure user document exists
             if (!doc.exists()) {
                 userRef.set(mapOf("createdAt" to System.currentTimeMillis()))
             }
 
-            // Update streak and last login
+            if (lastLogin != null) {
+                val lastDate = sdf.parse(lastLogin)
+                val currentDate = sdf.parse(today)
+
+                // Calculate days between last login and today
+                val diffInDays = ((currentDate.time - lastDate.time) / (1000 * 60 * 60 * 24)).toInt()
+
+                when (diffInDays) {
+                    0 -> {
+                        // Already logged in today → no change
+                        return@addOnSuccessListener
+                    }
+                    1 -> {
+                        // Consecutive day → increase streak
+                        currentStreak += 1
+                    }
+                    else -> {
+                        // Missed one or more days → reset streak
+                        currentStreak = 1
+                    }
+                }
+            } else {
+                // First login ever → start streak
+                currentStreak = 1
+            }
+            // Save updates to Firestore
             userRef.update(
                 mapOf(
                     "lastLoginDate" to today,
-                    "loginStreak" to streak
+                    "loginStreak" to currentStreak
                 )
             ).addOnFailureListener {
-                // Ignore failures for now
+                Log.e("FirestoreError", "Failed to update login streak", it)
             }
 
-            // Only show popup if lastLogin is null or different from today
-            if (lastLogin != today) {
-                showStreakPopup(streak)
-            }
+            // Only show popup if this is a new day login
+            showStreakPopup(currentStreak)
         }
     }
+
 
 
     private fun showStreakPopup(streak: Long) {
