@@ -157,6 +157,16 @@
             android:layout_height="wrap_content"
             android:visibility="gone"/>
 
+        <TextView
+            android:id="@+id/budgetFeedbackText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Loading feedback..."
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:gravity="center"
+            android:layout_marginTop="16dp"/>
+
 
         <Button
             android:id="@+id/simulateMonthEndButton"

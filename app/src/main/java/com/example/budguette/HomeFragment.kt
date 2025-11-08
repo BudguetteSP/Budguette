@@ -83,6 +83,8 @@ class HomeFragment : Fragment() {
         checkLoginStreak()
         checkAndStoreMonthPerformance()
         loadBudgetAnalytics(view)
+        showBudgetFeedback(view)
+
 
         return view
     }
@@ -581,6 +583,51 @@ class HomeFragment : Fragment() {
                 }
         }
     }
+
+    private fun showBudgetFeedback(view: View) {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val db = FirebaseFirestore.getInstance()
+        val feedbackText = view.findViewById<TextView>(R.id.budgetFeedbackText)
+
+        db.collection("users")
+            .document(userId)
+            .collection("monthlyReports")
+            .orderBy("timestamp", Query.Direction.DESCENDING)
+            .limit(3)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                if (snapshot.isEmpty()) {
+                    feedbackText.text = "No budget data yet!"
+                    return@addOnSuccessListener
+                }
+
+                val reports = snapshot.documents.map { doc ->
+                    val overBudget = doc.getBoolean("overBudget") ?: false
+                    overBudget
+                }
+
+                if (reports.size < 3) {
+                    feedbackText.text = "Keep going! More data coming soon."
+                    return@addOnSuccessListener
+                }
+
+                if (reports.all { it }) {
+                    // All 3 months over budget → give a tip
+                    val tip = financialTips.random()
+                    feedbackText.text = "💡 Financial Tip: $tip"
+                    feedbackText.setTextColor(Color.parseColor("#FF6347")) // red
+                } else {
+                    // Otherwise, good job
+                    feedbackText.text = "✅ Good Job! You are managing your budget well."
+                    feedbackText.setTextColor(Color.parseColor("#32CD32")) // green
+                }
+            }
+            .addOnFailureListener {
+                feedbackText.text = "Failed to load feedback."
+                feedbackText.setTextColor(Color.WHITE)
+            }
+    }
+
 
     private fun simulateMonthEnd() {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
