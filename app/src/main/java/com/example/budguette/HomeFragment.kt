@@ -16,6 +16,11 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
 import java.util.*
+import android.graphics.Color
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.firestore.Query
+
 
 class HomeFragment : Fragment() {
 
@@ -32,6 +37,7 @@ class HomeFragment : Fragment() {
     private lateinit var displayBudgetTextView: TextView
     private lateinit var remainingBudgetTextView: TextView
     private lateinit var budgetPieChart: PieChart
+    private lateinit var analyticsMessage: TextView
     private var monthlyBudget: Double = 0.0
     private var totalExpenses: Double = 0.0
     private var totalSubscriptions: Double = 0.0
@@ -65,12 +71,18 @@ class HomeFragment : Fragment() {
             saveMonthlyBudget()
         }
 
+        val simulateMonthEndButton = view.findViewById<Button>(R.id.simulateMonthEndButton)
+        simulateMonthEndButton.setOnClickListener {
+            simulateMonthEnd()
+        }
+
         // Load data
         loadMonthlyBudget()
         loadExpenseSummary()
         loadSubscriptionSummary()
         checkLoginStreak()
         checkAndStoreMonthPerformance()
+        loadBudgetAnalytics(view)
 
         return view
     }
@@ -314,55 +326,37 @@ class HomeFragment : Fragment() {
         budgetPieChart.invalidate()
     }
 
-    private fun loadBudgetAnalytics() {
+    private fun loadBudgetAnalytics(view: View) {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
         val db = FirebaseFirestore.getInstance()
-        val sdf = SimpleDateFormat("yyyy-MM", Locale.getDefault())
+
+        val recyclerView = view.findViewById<RecyclerView>(R.id.analyticsRecyclerView)
+        recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
         db.collection("users")
             .document(userId)
-            .collection("budgetHistory")
-            .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
+            .collection("monthlyReports")
+            .orderBy("timestamp", Query.Direction.DESCENDING)
             .limit(3)
             .get()
             .addOnSuccessListener { snapshot ->
-                val entries = mutableListOf<PieEntry>()
-                val colors = mutableListOf<Int>()
+                if (snapshot.isEmpty) return@addOnSuccessListener
 
-                for (doc in snapshot.documents.reversed()) {
-                    val month = doc.getString("month") ?: continue
-                    val status = doc.getString("status") ?: "under"
-                    val spent = doc.getDouble("totalSpent") ?: 0.0
-
-                    entries.add(PieEntry(spent.toFloat(), month))
-                    val color = if (status == "over") {
-                        android.graphics.Color.parseColor("#FF6347") // red
-                    } else {
-                        android.graphics.Color.parseColor("#32CD32") // green
-                    }
-                    colors.add(color)
+                val reports = snapshot.documents.reversed().map { doc ->
+                    MonthlyReport(
+                        month = doc.getString("month") ?: "",
+                        spent = doc.getDouble("spent") ?: 0.0,
+                        overBudget = doc.getBoolean("overBudget") ?: false
+                    )
                 }
 
-                if (entries.isEmpty()) return@addOnSuccessListener
-
-                val dataSet = PieDataSet(entries, "Last 3 Months")
-                dataSet.colors = colors
-                dataSet.valueTextColor = android.graphics.Color.WHITE
-                dataSet.valueTextSize = 14f
-
-                val data = PieData(dataSet)
-
-                val analyticsChart = view?.findViewById<PieChart>(R.id.analyticsPieChart)
-                analyticsChart?.data = data
-                analyticsChart?.description?.isEnabled = false
-                analyticsChart?.isDrawHoleEnabled = true
-                analyticsChart?.setHoleColor(android.graphics.Color.parseColor("#0A1F44"))
-                analyticsChart?.animateY(1000)
-                analyticsChart?.invalidate()
+                recyclerView.adapter = MonthlyReportAdapter(reports)
+                recyclerView.visibility = View.VISIBLE
+            }
+            .addOnFailureListener {
+                Log.e("FirestoreError", "Failed to load analytics", it)
             }
     }
-
-
 
 
     private fun updatePieChart(pieChart: PieChart, entries: List<PieEntry>) {
@@ -587,6 +581,38 @@ class HomeFragment : Fragment() {
                 }
         }
     }
+
+    private fun simulateMonthEnd() {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val db = FirebaseFirestore.getInstance()
+
+        val sdf = SimpleDateFormat("yyyy-MM", Locale.getDefault())
+        val currentMonth = sdf.format(Date())
+
+        val totalSpent = totalExpenses + totalSubscriptions
+        val overBudget = totalSpent > monthlyBudget
+
+        val reportData = hashMapOf(
+            "month" to currentMonth,
+            "budget" to monthlyBudget,
+            "spent" to totalSpent,
+            "overBudget" to overBudget,
+            "timestamp" to System.currentTimeMillis()
+        )
+
+        db.collection("users")
+            .document(userId)
+            .collection("monthlyReports")
+            .document(currentMonth)
+            .set(reportData)
+            .addOnSuccessListener {
+                Toast.makeText(requireContext(), "Simulated month end saved!", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(requireContext(), "Failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
 
 
 
