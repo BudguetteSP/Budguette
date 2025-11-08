@@ -70,6 +70,7 @@ class HomeFragment : Fragment() {
         loadExpenseSummary()
         loadSubscriptionSummary()
         checkLoginStreak()
+        checkAndStoreMonthPerformance()
 
         return view
     }
@@ -313,6 +314,55 @@ class HomeFragment : Fragment() {
         budgetPieChart.invalidate()
     }
 
+    private fun loadBudgetAnalytics() {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val db = FirebaseFirestore.getInstance()
+        val sdf = SimpleDateFormat("yyyy-MM", Locale.getDefault())
+
+        db.collection("users")
+            .document(userId)
+            .collection("budgetHistory")
+            .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
+            .limit(3)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val entries = mutableListOf<PieEntry>()
+                val colors = mutableListOf<Int>()
+
+                for (doc in snapshot.documents.reversed()) {
+                    val month = doc.getString("month") ?: continue
+                    val status = doc.getString("status") ?: "under"
+                    val spent = doc.getDouble("totalSpent") ?: 0.0
+
+                    entries.add(PieEntry(spent.toFloat(), month))
+                    val color = if (status == "over") {
+                        android.graphics.Color.parseColor("#FF6347") // red
+                    } else {
+                        android.graphics.Color.parseColor("#32CD32") // green
+                    }
+                    colors.add(color)
+                }
+
+                if (entries.isEmpty()) return@addOnSuccessListener
+
+                val dataSet = PieDataSet(entries, "Last 3 Months")
+                dataSet.colors = colors
+                dataSet.valueTextColor = android.graphics.Color.WHITE
+                dataSet.valueTextSize = 14f
+
+                val data = PieData(dataSet)
+
+                val analyticsChart = view?.findViewById<PieChart>(R.id.analyticsPieChart)
+                analyticsChart?.data = data
+                analyticsChart?.description?.isEnabled = false
+                analyticsChart?.isDrawHoleEnabled = true
+                analyticsChart?.setHoleColor(android.graphics.Color.parseColor("#0A1F44"))
+                analyticsChart?.animateY(1000)
+                analyticsChart?.invalidate()
+            }
+    }
+
+
 
 
     private fun updatePieChart(pieChart: PieChart, entries: List<PieEntry>) {
@@ -471,10 +521,6 @@ class HomeFragment : Fragment() {
     }
 
 
-
-
-
-
     private val financialTips = listOf(
         "Track every expense, no matter how small.",
         "Set aside 10% of every paycheck before spending.",
@@ -485,6 +531,62 @@ class HomeFragment : Fragment() {
         "Automate bill payments to avoid late fees.",
         "Use the 50/30/20 rule: Needs, Wants, Savings."
     )
+
+    private fun checkAndStoreMonthPerformance() {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val db = FirebaseFirestore.getInstance()
+
+        val sdf = SimpleDateFormat("yyyy-MM", Locale.getDefault())
+        val currentMonth = sdf.format(Date())
+
+        // Get previous month key
+        val cal = Calendar.getInstance().apply { add(Calendar.MONTH, -1) }
+        val prevMonth = sdf.format(cal.time)
+
+        val userRef = db.collection("users").document(userId)
+        val historyRef = userRef.collection("budgetHistory").document(prevMonth)
+
+        // Check if already stored
+        historyRef.get().addOnSuccessListener { doc ->
+            if (doc.exists()) return@addOnSuccessListener // already recorded
+
+            // Compute last month's spending
+            db.collection("users")
+                .document(userId)
+                .collection("transactions")
+                .get()
+                .addOnSuccessListener { transactions ->
+                    var totalSpent = 0.0
+                    val monthSdf = SimpleDateFormat("yyyy-MM", Locale.getDefault())
+
+                    for (t in transactions) {
+                        val millis = t.getLong("date") ?: continue
+                        val date = Date(millis)
+                        if (monthSdf.format(date) == prevMonth) {
+                            totalSpent += t.getDouble("cost") ?: 0.0
+                        }
+                    }
+
+                    userRef.get().addOnSuccessListener { userDoc ->
+                        val budget = userDoc.getDouble("monthlyBudget") ?: 0.0
+                        val status = if (totalSpent > budget) "over" else "under"
+
+                        val monthData = mapOf(
+                            "month" to prevMonth,
+                            "totalSpent" to totalSpent,
+                            "budget" to budget,
+                            "status" to status,
+                            "timestamp" to System.currentTimeMillis()
+                        )
+
+                        historyRef.set(monthData)
+                            .addOnSuccessListener {
+                                Log.d("BudgetHistory", "Stored performance for $prevMonth")
+                            }
+                    }
+                }
+        }
+    }
 
 
 
