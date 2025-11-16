@@ -62,6 +62,11 @@ class HomeFragment : Fragment() {
         remainingBudgetTextView = view.findViewById(R.id.remainingBudgetTextView)
         budgetPieChart = view.findViewById(R.id.budgetPieChart)
 
+        // Add extra padding so labels don't get cut off
+        budgetPieChart.setExtraOffsets(15f, 15f, 15f, 15f)
+        expensePieChart.setExtraOffsets(15f, 15f, 15f, 15f)
+        subscriptionPieChart.setExtraOffsets(15f, 15f, 15f, 15f)
+
         // Display current month
         val monthTextView = view.findViewById<TextView>(R.id.currentMonthTextView)
         val sdf = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
@@ -281,14 +286,12 @@ class HomeFragment : Fragment() {
         val used = totalExpenses + totalSubscriptions
         val remaining = monthlyBudget - used
 
-        // Update remaining budget text
         remainingBudgetTextView.text = if (remaining >= 0) {
             "Remaining Budget: $${"%.2f".format(remaining)}"
         } else {
             "Over Budget: $${"%.2f".format(-remaining)}"
         }
 
-        // Pie chart entries
         val entries = mutableListOf<PieEntry>()
         if (used > 0) entries.add(PieEntry(used.toFloat(), "Used"))
         if (remaining > 0) entries.add(PieEntry(remaining.toFloat(), "Remaining"))
@@ -296,11 +299,18 @@ class HomeFragment : Fragment() {
 
         val dataSet = PieDataSet(entries, "")
         dataSet.colors = listOf(
-            android.graphics.Color.parseColor("#FF6347"), // red for used
-            android.graphics.Color.parseColor("#32CD32"), // green for remaining
-            android.graphics.Color.parseColor("#8B0000")  // dark red for over budget
+            Color.parseColor("#FF6347"), // used
+            Color.parseColor("#32CD32"), // remaining
+            Color.parseColor("#8B0000")  // over
         )
-        dataSet.valueTextColor = android.graphics.Color.WHITE
+
+        // Labels outside slices
+        dataSet.xValuePosition = PieDataSet.ValuePosition.OUTSIDE_SLICE
+        dataSet.yValuePosition = PieDataSet.ValuePosition.OUTSIDE_SLICE
+        dataSet.valueLinePart1Length = 0.5f
+        dataSet.valueLinePart2Length = 0.5f
+        dataSet.valueLineColor = Color.WHITE
+        dataSet.valueTextColor = Color.WHITE
         dataSet.valueTextSize = 14f
 
         val data = PieData(dataSet)
@@ -308,21 +318,29 @@ class HomeFragment : Fragment() {
         budgetPieChart.setUsePercentValues(true)
         budgetPieChart.description.isEnabled = false
         budgetPieChart.setDrawEntryLabels(true)
-        budgetPieChart.setEntryLabelColor(android.graphics.Color.WHITE)
+        budgetPieChart.setEntryLabelColor(Color.WHITE)
         budgetPieChart.setEntryLabelTextSize(12f)
         budgetPieChart.isDrawHoleEnabled = true
-        budgetPieChart.setHoleColor(android.graphics.Color.parseColor("#0A1F44"))
+        budgetPieChart.setHoleColor(Color.parseColor("#0A1F44"))
         budgetPieChart.holeRadius = 45f
         budgetPieChart.transparentCircleRadius = 50f
 
-        // LEGEND styling
+        // Legend styling with spacing and word wrap
         val legend = budgetPieChart.legend
         legend.isEnabled = true
-        legend.textColor = android.graphics.Color.WHITE
+        legend.textColor = Color.WHITE
         legend.textSize = 12f
         legend.form = com.github.mikephil.charting.components.Legend.LegendForm.CIRCLE
         legend.verticalAlignment = com.github.mikephil.charting.components.Legend.LegendVerticalAlignment.BOTTOM
         legend.horizontalAlignment = com.github.mikephil.charting.components.Legend.LegendHorizontalAlignment.CENTER
+        legend.orientation = com.github.mikephil.charting.components.Legend.LegendOrientation.HORIZONTAL
+        legend.isWordWrapEnabled = true
+        legend.xEntrySpace = 8f
+        legend.yEntrySpace = 4f
+        legend.formSize = 12f
+
+        legend.yOffset = 12f  // increase this to push the legend slightly upward
+        budgetPieChart.setExtraOffsets(0f, 0f, 0f, 20f)  // left, top, right, bottom
 
         budgetPieChart.animateY(1000)
         budgetPieChart.invalidate()
@@ -364,15 +382,21 @@ class HomeFragment : Fragment() {
     private fun updatePieChart(pieChart: PieChart, entries: List<PieEntry>) {
         val dataSet = PieDataSet(entries, "")
         dataSet.colors = listOf(
-            android.graphics.Color.parseColor("#FFD700"), // gold
-            android.graphics.Color.parseColor("#87CEEB"), // sky blue
-            android.graphics.Color.parseColor("#32CD32"), // lime green
-            android.graphics.Color.parseColor("#FF4500"), // orange red
-            android.graphics.Color.parseColor("#0A1F44"),  // navy blue
-            android.graphics.Color.parseColor("#800080") // purple
-
+            Color.parseColor("#FFD700"), // gold
+            Color.parseColor("#87CEEB"), // sky blue
+            Color.parseColor("#32CD32"), // lime green
+            Color.parseColor("#FF4500"), // orange red
+            Color.parseColor("#0A1F44"), // navy blue
+            Color.parseColor("#800080")  // purple
         )
-        dataSet.valueTextColor = android.graphics.Color.BLACK
+
+        // Labels outside slices
+        dataSet.xValuePosition = PieDataSet.ValuePosition.OUTSIDE_SLICE
+        dataSet.yValuePosition = PieDataSet.ValuePosition.OUTSIDE_SLICE
+        dataSet.valueLinePart1Length = 0.5f
+        dataSet.valueLinePart2Length = 0.5f
+        dataSet.valueLineColor = Color.WHITE
+        dataSet.valueTextColor = Color.WHITE
         dataSet.valueTextSize = 14f
 
         val data = PieData(dataSet)
@@ -380,21 +404,29 @@ class HomeFragment : Fragment() {
         pieChart.setUsePercentValues(false)
         pieChart.description.isEnabled = false
         pieChart.setDrawEntryLabels(true)
-        pieChart.setEntryLabelColor(android.graphics.Color.BLACK)
+        pieChart.setEntryLabelColor(Color.WHITE)
         pieChart.setEntryLabelTextSize(12f)
         pieChart.isDrawHoleEnabled = true
-        pieChart.setHoleColor(android.graphics.Color.parseColor("#0A1F44"))
+        pieChart.setHoleColor(Color.parseColor("#0A1F44"))
         pieChart.holeRadius = 45f
         pieChart.transparentCircleRadius = 50f
 
-        // Correctly retrieve legend and set its text color
+        // Legend with spacing
         val legend = pieChart.legend
         legend.isEnabled = true
-        legend.textColor = android.graphics.Color.WHITE
+        legend.textColor = Color.WHITE
         legend.textSize = 12f
         legend.form = com.github.mikephil.charting.components.Legend.LegendForm.CIRCLE
         legend.verticalAlignment = com.github.mikephil.charting.components.Legend.LegendVerticalAlignment.BOTTOM
         legend.horizontalAlignment = com.github.mikephil.charting.components.Legend.LegendHorizontalAlignment.CENTER
+        legend.orientation = com.github.mikephil.charting.components.Legend.LegendOrientation.HORIZONTAL
+        legend.isWordWrapEnabled = true
+        legend.xEntrySpace = 8f
+        legend.yEntrySpace = 4f
+        legend.formSize = 12f
+
+        legend.yOffset = 12f  // increase this to push the legend slightly upward
+        pieChart.setExtraOffsets(0f, 0f, 0f, 20f)  // left, top, right, bottom
 
         pieChart.animateY(1000)
         pieChart.invalidate()
